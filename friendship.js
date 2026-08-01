@@ -185,15 +185,17 @@ document.getElementById("photoUpload").addEventListener("change", (e) => {
   }
 });
 
-// --- Interactive Scratch-Card Reveal Engine ---
+// --- Interactive Scratch-Card Engine with 60-70% Auto-Complete ---
 function initScratchCard() {
   const canvas = document.getElementById("scratchCanvas");
   if (!canvas) return;
   const ctxScratch = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
   
-  canvas.width = rect.width || 320;
-  canvas.height = rect.height || 180;
+  canvas.style.opacity = "1";
+  canvas.style.pointerEvents = "auto";
+  canvas.width = rect.width || 360;
+  canvas.height = rect.height || 200;
 
   const grad = ctxScratch.createLinearGradient(0, 0, canvas.width, canvas.height);
   grad.addColorStop(0, "#d4af37");
@@ -203,22 +205,52 @@ function initScratchCard() {
   ctxScratch.fillRect(0, 0, canvas.width, canvas.height);
 
   ctxScratch.fillStyle = "#4a3b10";
-  ctxScratch.font = "bold 15px Poppins";
+  ctxScratch.font = "bold 16px Poppins";
   ctxScratch.textAlign = "center";
   ctxScratch.fillText("✨ Scratch to Reveal Message! ✨", canvas.width / 2, canvas.height / 2);
 
   let isScratching = false;
+  let isCompleted = false;
+
+  function checkScratchPercentage() {
+    if (isCompleted) return;
+    const imageData = ctxScratch.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let clearedCount = 0;
+
+    // Check alpha channel on every 4th pixel for high efficiency
+    for (let i = 3; i < pixels.length; i += 16) {
+      if (pixels[i] === 0) {
+        clearedCount++;
+      }
+    }
+
+    const totalSampledPixels = pixels.length / 16;
+    const percentageCleared = (clearedCount / totalSampledPixels) * 100;
+
+    // Auto-complete if 65% scratched off
+    if (percentageCleared >= 65) {
+      isCompleted = true;
+      canvas.style.opacity = "0";
+      canvas.style.pointerEvents = "none";
+      playPopSound();
+      burstSparkles();
+      showToast("Message fully revealed! 🎉");
+    }
+  }
 
   function scratch(e) {
-    if (!isScratching) return;
+    if (!isScratching || isCompleted) return;
     const r = canvas.getBoundingClientRect();
     const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left;
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
 
     ctxScratch.globalCompositeOperation = "destination-out";
     ctxScratch.beginPath();
-    ctxScratch.arc(x, y, 22, 0, Math.PI * 2);
+    ctxScratch.arc(x, y, 26, 0, Math.PI * 2);
     ctxScratch.fill();
+
+    checkScratchPercentage();
   }
 
   ["mousedown", "touchstart"].forEach(evt => canvas.addEventListener(evt, (e) => { isScratching = true; scratch(e); }));
