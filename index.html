@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,7 +51,7 @@
               </div>
             </div>
 
-            <!-- FEATURE 1: Photo Polaroid Upload -->
+            <!-- Photo Polaroid Upload -->
             <div class="input-group">
               <label for="photoUpload">Upload a Memory Photo (Optional)</label>
               <input type="file" id="photoUpload" accept="image/*" />
@@ -63,16 +62,6 @@
                 <img id="polaroidImg" alt="Memory Photo" />
                 <p class="polaroid-caption" id="polaroidCaption">Besties ✨</p>
               </div>
-            </div>
-
-            <!-- FEATURE 4: Secret Quiz Lock Inputs -->
-            <div class="input-group">
-              <label for="quizQuestion">Secret Question (Optional)</label>
-              <input type="text" id="quizQuestion" placeholder="e.g. What is our secret code word?" maxlength="60" />
-            </div>
-            <div class="input-group">
-              <label for="quizAnswer">Answer</label>
-              <input type="text" id="quizAnswer" placeholder="e.g. Mango" maxlength="30" />
             </div>
 
             <p class="form-error" id="formError" role="alert">Please fill in both names</p>
@@ -94,7 +83,7 @@
             </div>
           </div>
 
-          <!-- FEATURE 3: Interactive Scratch-Card Reveal -->
+          <!-- Interactive Scratch-Card Reveal -->
           <div class="scratch-wrapper">
             <canvas id="scratchCanvas" class="scratch-canvas"></canvas>
             <div class="message-content" id="messageContent"></div>
@@ -135,7 +124,7 @@
         <div class="cutout-row" id="cutoutRow2"></div>
       </div>
 
-      <!-- FEATURE 5: Friendship Coupons Pack -->
+      <!-- Friendship Coupons Pack -->
       <div class="coupons-container">
         <h3 class="coupons-title">🎁 Special Friendship Coupons</h3>
         <div class="coupons-grid">
@@ -162,17 +151,6 @@
         <button class="btn btn-ghost" id="stickerShareBtn" type="button">🔗 Share link</button>
         <button class="btn btn-reset" id="stickerResetBtn" type="button">↺ Create new</button>
       </div>
-    </div>
-  </div>
-
-  <!-- FEATURE 4: Secret Quiz Lock Modal -->
-  <div class="quiz-overlay" id="quizOverlay" hidden>
-    <div class="quiz-modal">
-      <h3>🔒 Secret Question!</h3>
-      <p id="displayQuizQuestion" class="quiz-q-text"></p>
-      <input type="text" id="userQuizInput" placeholder="Type your answer..." />
-      <button type="button" class="btn btn-primary" id="submitQuizBtn" style="margin-top: 12px;">Unlock 🔑</button>
-      <p id="quizError" class="quiz-error">Incorrect answer! Try again 😉</p>
     </div>
   </div>
 
