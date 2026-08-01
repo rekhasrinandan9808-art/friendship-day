@@ -172,7 +172,13 @@ document.getElementById("photoUpload").addEventListener("change", (e) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       uploadedImageDataUrl = event.target.result;
-      document.getElementById("polaroidImg").src = uploadedImageDataUrl;
+      
+      const frontImg = document.getElementById("polaroidImg");
+      const backImg = document.getElementById("cardBackPolaroidImg");
+      
+      if (frontImg) frontImg.src = uploadedImageDataUrl;
+      if (backImg) backImg.src = uploadedImageDataUrl;
+      
       document.getElementById("polaroidPreview").hidden = false;
     };
     reader.readAsDataURL(file);
@@ -187,7 +193,7 @@ function initScratchCard() {
   const rect = canvas.getBoundingClientRect();
   
   canvas.width = rect.width || 320;
-  canvas.height = rect.height || 220;
+  canvas.height = rect.height || 180;
 
   const grad = ctxScratch.createLinearGradient(0, 0, canvas.width, canvas.height);
   grad.addColorStop(0, "#d4af37");
@@ -267,7 +273,8 @@ function revealSurprise(you, friend, updateUrl = true) {
   state.friendName = friend;
 
   if (uploadedImageDataUrl) {
-    document.getElementById("cardBackPolaroidImg").src = uploadedImageDataUrl;
+    const backPolaroidImg = document.getElementById("cardBackPolaroidImg");
+    if (backPolaroidImg) backPolaroidImg.src = uploadedImageDataUrl;
     document.getElementById("cardBackPolaroid").hidden = false;
   }
 
