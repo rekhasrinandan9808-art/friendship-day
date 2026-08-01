@@ -1,27 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Happy Friendship Day 💙</title>
-
-  <!-- Google Fonts: Dancing Script for emotional display text, Poppins for clean UI text -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="friendship.css" />
 </head>
-
 <body>
-
-  <!-- Layer 1: animated pastel gradient, always present -->
   <div class="gradient-bg" id="gradientBg"></div>
-
-  <!-- Layer 1b: soft blurred colour blobs so the backdrop doesn't feel empty -->
+  
   <div class="glow-layer" id="glowLayer" aria-hidden="true">
     <span class="glow-blob blob-1"></span>
     <span class="glow-blob blob-2"></span>
@@ -29,78 +19,60 @@
     <span class="glow-blob blob-4"></span>
   </div>
 
-  <!-- Layer 2: starry night sky, fades in after the surprise is revealed -->
   <div class="stars-layer" id="starsLayer"></div>
-
-  <!-- Layer 3: ambient floating hearts / stars / smileys, sits above the background -->
   <div class="floating-layer" id="floatingLayer"></div>
-
-  <!-- Layer 4: full-screen canvas used only for the confetti burst -->
   <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 
   <main class="stage">
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
-
-        <!-- FRONT FACE: greeting + name inputs -->
+        <!-- FRONT FACE -->
         <section class="card-face card-front" id="cardFront">
           <p class="eyebrow">✨ A little something for a special someone</p>
           <h1 class="title">Happy Friendship&nbsp;Day <span class="title-heart">💙</span></h1>
           <p class="subtitle">Some friendships make life more beautiful.</p>
-
           <form class="form" id="surpriseForm" novalidate>
             <div class="input-pair">
               <div class="input-group">
                 <label for="yourName">Your name</label>
-                <input type="text" id="yourName" name="yourName" placeholder="Enter name " maxlength="30"
-                  autocomplete="off" />
+                <input type="text" id="yourName" name="yourName" placeholder="Enter name" maxlength="30" autocomplete="off" />
               </div>
-
-
-
               <div class="input-group">
                 <label for="friendName">Friend's name</label>
-                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30"
-                  autocomplete="off" />
+                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30" autocomplete="off" />
               </div>
             </div>
-
-            <p class="form-error" id="formError" role="alert">Please fill in both names </p>
-
+            <p class="form-error" id="formError" role="alert">Please fill in both names</p>
             <button type="submit" class="btn btn-primary" id="generateBtn">
-              <span>Generate Surprise</span> <span class="btn-sparkle">✨</span>
+              <span>Generate Surprise</span>
+              <span class="btn-sparkle">✨</span>
             </button>
           </form>
         </section>
 
-        <!-- BACK FACE: revealed message + actions -->
+        <!-- BACK FACE -->
         <section class="card-face card-back" id="cardBack">
           <div class="message-content" id="messageContent"></div>
           <p class="quote" id="quote"></p>
-
           <div class="action-buttons">
             <button class="btn btn-ghost" id="copyBtn" type="button">📋 Copy message</button>
             <button class="btn btn-ghost" id="downloadBtn" type="button">⬇️ Download card</button>
-            <button class="btn btn-ghost" id="shareBtn" type="button">🔗 Share</button>
-            <button class="btn btn-reset" id="resetBtn" type="button">↺ Make another</button>
+            <button class="btn btn-ghost" id="shareBtn" type="button">🔗 Share link</button>
+            <button class="btn btn-reset" id="resetBtn" type="button">↺ Create new</button>
           </div>
-
           <button class="next-slide-btn" id="nextSlideBtn" type="button">
             One more surprise <span class="chevron">›</span>
           </button>
         </section>
-
       </div>
     </div>
   </main>
 
-  <!-- SLIDE 3: scrapbook-style sticker card, slides in after the message -->
+  <!-- SLIDE 3: Scrapbook Sticker Card -->
   <div class="sticker-stage" id="stickerStage">
     <button class="nav-arrow nav-back" id="stickerBackBtn" type="button" aria-label="Back to your message">‹</button>
-
     <div class="sticker-card" id="stickerCard">
       <div class="paper-grain" aria-hidden="true"></div>
-
       <div class="sticker-deco" aria-hidden="true">
         <span class="deco d1">❤️</span>
         <span class="deco d2">⭐</span>
@@ -110,24 +82,19 @@
         <span class="deco d6">🩷</span>
         <span class="deco d7">💫</span>
       </div>
-
       <div class="cutout-heading" id="cutoutHeading">
         <div class="cutout-row" id="cutoutRow1"></div>
         <div class="cutout-row" id="cutoutRow2"></div>
       </div>
-
       <div class="sticker-actions">
         <button class="btn btn-ghost" id="stickerDownloadBtn" type="button">⬇️ Download</button>
-        <button class="btn btn-ghost" id="stickerShareBtn" type="button">🔗 Share</button>
-        <button class="btn btn-reset" id="stickerResetBtn" type="button">↺ Make another</button>
+        <button class="btn btn-ghost" id="stickerShareBtn" type="button">🔗 Share link</button>
+        <button class="btn btn-reset" id="stickerResetBtn" type="button">↺ Create new</button>
       </div>
     </div>
   </div>
 
-  <!-- Small floating toast for copy / share feedback -->
   <div class="toast" id="toast"></div>
-
   <script src="friendship.js"></script>
 </body>
-
 </html>
