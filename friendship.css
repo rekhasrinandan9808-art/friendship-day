@@ -1,8 +1,5 @@
 /* =========================================================
-   FRIENDSHIP DAY — style.css
-   Palette: icy blue → lavender → blush pink, glassmorphism,
-   deep indigo ink, warm gold accents. Poppins for UI text,
-   Dancing Script for emotional display text.
+   FRIENDSHIP DAY — friendship.css
    ========================================================= */
 
 :root {
@@ -36,7 +33,9 @@
   --font-body: "Poppins", sans-serif;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html, body {
   height: 100%;
@@ -50,29 +49,28 @@ body {
   min-height: 100vh;
 }
 
-/* ---------------------------------------------------------
-   BACKGROUND LAYERS
-   --------------------------------------------------------- */
+/* --- Background Layers --- */
 
 .gradient-bg {
   position: fixed;
   inset: 0;
   z-index: -3;
-  background: rgb(10, 8, 19);
+  background: linear-gradient(-45deg, #e9f1fb, #ece6fb, #fdeaf2, #e3f2fd);
   background-size: 400% 400%;
   animation: gradientShift 16s ease infinite;
   transition: opacity 1.4s ease;
 }
 
-.gradient-bg.night { opacity: 0; }
+.gradient-bg.night {
+  opacity: 0;
+}
 
 @keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* soft blurred colour blobs — fills the empty space around the card */
 .glow-layer {
   position: fixed;
   inset: 0;
@@ -81,7 +79,9 @@ body {
   transition: opacity 1s ease;
 }
 
-body.night .glow-layer { opacity: 0; }
+body.night .glow-layer {
+  opacity: 0;
+}
 
 .glow-blob {
   position: absolute;
@@ -91,14 +91,14 @@ body.night .glow-layer { opacity: 0; }
   animation: blobDrift 16s ease-in-out infinite;
 }
 
-.blob-1 { width: 260px; height: 260px; top: 6%;  left: -6%; background: radial-gradient(circle, var(--accent-1), transparent 70%); animation-delay: 0s; }
+.blob-1 { width: 260px; height: 260px; top: 6%; left: -6%; background: radial-gradient(circle, var(--accent-1), transparent 70%); animation-delay: 0s; }
 .blob-2 { width: 320px; height: 320px; bottom: 4%; right: -8%; background: radial-gradient(circle, var(--accent-2), transparent 70%); animation-delay: -4s; }
-.blob-3 { width: 200px; height: 200px; top: 62%; left: 4%;  background: radial-gradient(circle, var(--gold), transparent 70%); animation-delay: -9s; }
+.blob-3 { width: 200px; height: 200px; top: 62%; left: 4%; background: radial-gradient(circle, var(--gold), transparent 70%); animation-delay: -9s; }
 .blob-4 { width: 220px; height: 220px; top: -6%; right: 12%; background: radial-gradient(circle, #b6e3ff, transparent 70%); animation-delay: -13s; }
 
 @keyframes blobDrift {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(18px, -22px) scale(1.12); }
+  50% { transform: translate(18px, -22px) scale(1.12); }
 }
 
 .stars-layer {
@@ -111,7 +111,9 @@ body.night .glow-layer { opacity: 0; }
   pointer-events: none;
 }
 
-.stars-layer.visible { opacity: 1; }
+.stars-layer.visible {
+  opacity: 1;
+}
 
 .star {
   position: absolute;
@@ -122,10 +124,9 @@ body.night .glow-layer { opacity: 0; }
 
 @keyframes twinkle {
   0%, 100% { opacity: 0.15; transform: scale(0.8); }
-  50%      { opacity: 1;    transform: scale(1.15); }
+  50% { opacity: 1; transform: scale(1.15); }
 }
 
-/* Soft drifting "memory" bubbles that appear once it's night */
 .memory {
   position: absolute;
   bottom: -40px;
@@ -136,15 +137,11 @@ body.night .glow-layer { opacity: 0; }
 }
 
 @keyframes memoryFloat {
-  0%   { transform: translateY(0) translateX(0); opacity: 0; }
-  10%  { opacity: 0.9; }
-  90%  { opacity: 0.6; }
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.9; }
+  90% { opacity: 0.6; }
   100% { transform: translateY(-110vh) translateX(var(--drift, 20px)); opacity: 0; }
 }
-
-/* ---------------------------------------------------------
-   AMBIENT FLOATING ICONS (hearts / stars / smileys)
-   --------------------------------------------------------- */
 
 .floating-layer {
   position: fixed;
@@ -163,16 +160,14 @@ body.night .glow-layer { opacity: 0; }
 }
 
 @keyframes floatUp {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-  8%   { opacity: 0.55; }
-  50%  { transform: translateY(-55vh) translateX(var(--drift, 30px)) rotate(10deg); }
-  92%  { opacity: 0.4; }
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  8% { opacity: 0.55; }
+  50% { transform: translateY(-55vh) translateX(var(--drift, 30px)) rotate(10deg); }
+  92% { opacity: 0.4; }
   100% { transform: translateY(-115vh) translateX(calc(var(--drift, 30px) * -1)) rotate(-8deg); opacity: 0; }
 }
 
-/* ---------------------------------------------------------
-   STAGE / CARD CONTAINER (3D flip)
-   --------------------------------------------------------- */
+/* --- Stage & Cards --- */
 
 .stage {
   min-height: 100vh;
@@ -190,18 +185,20 @@ body.night .glow-layer { opacity: 0; }
 
 .card {
   position: relative;
-  width: 120%;
-  min-height: 460px;
+  width: 100%;
+  min-height: 480px;
   transform-style: preserve-3d;
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   animation: cardIntro 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.card.flipped { transform: rotateY(180deg); }
+.card.flipped {
+  transform: rotateY(180deg);
+}
 
 @keyframes cardIntro {
   from { opacity: 0; transform: scale(0.9) translateY(18px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .card-face {
@@ -222,7 +219,9 @@ body.night .glow-layer { opacity: 0; }
   max-height: 85vh;
 }
 
-.card-front { justify-content: center; }
+.card-front {
+  justify-content: center;
+}
 
 .card-back {
   transform: rotateY(180deg);
@@ -231,9 +230,7 @@ body.night .glow-layer { opacity: 0; }
   text-align: center;
 }
 
-/* ---------------------------------------------------------
-   FRONT FACE CONTENT
-   --------------------------------------------------------- */
+/* --- Front Face Form --- */
 
 .eyebrow {
   margin: 0 0 6px;
@@ -255,13 +252,16 @@ body.night .glow-layer { opacity: 0; }
   color: var(--ink);
 }
 
-.title-heart { display: inline-block; animation: heartbeat 1.8s ease-in-out infinite; }
+.title-heart {
+  display: inline-block;
+  animation: heartbeat 1.8s ease-in-out infinite;
+}
 
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }
-  20%      { transform: scale(1.18); }
-  40%      { transform: scale(1); }
-  60%      { transform: scale(1.12); }
+  20% { transform: scale(1.18); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.12); }
 }
 
 .subtitle {
@@ -272,16 +272,24 @@ body.night .glow-layer { opacity: 0; }
   color: var(--ink-soft);
 }
 
-.form { display: flex; flex-direction: column; gap: 18px; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
 .input-pair {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 3px;
+  gap: 12px;
 }
 
-.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 .input-group label {
   font-size: 0.78rem;
@@ -302,18 +310,14 @@ body.night .glow-layer { opacity: 0; }
   transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
-.input-group input::placeholder { color: rgba(107, 100, 144, 0.55); }
+.input-group input::placeholder {
+  color: rgba(107, 100, 144, 0.55);
+}
 
 .input-group input:focus {
   border-color: var(--accent-1);
   background: #fff;
   box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.14);
-}
-
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50%      { transform: scale(1.25); opacity: 1; }
 }
 
 .form-error {
@@ -327,21 +331,25 @@ body.night .glow-layer { opacity: 0; }
   transition: opacity 0.25s ease;
 }
 
-.form-error.visible { opacity: 1; height: auto; margin: -4px 0 0; }
+.form-error.visible {
+  opacity: 1;
+  height: auto;
+  margin: -4px 0 0;
+}
 
-.card.shake { animation: shake 0.45s ease; }
+.card.shake {
+  animation: shake 0.45s ease;
+}
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  20%      { transform: translateX(-8px); }
-  40%      { transform: translateX(7px); }
-  60%      { transform: translateX(-5px); }
-  80%      { transform: translateX(4px); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(4px); }
 }
 
-/* ---------------------------------------------------------
-   BUTTONS
-   --------------------------------------------------------- */
+/* --- Buttons --- */
 
 .btn {
   font-family: var(--font-body);
@@ -354,7 +362,9 @@ body.night .glow-layer { opacity: 0; }
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.btn:active { transform: scale(0.96); }
+.btn:active {
+  transform: scale(0.96);
+}
 
 .btn-primary {
   display: flex;
@@ -363,17 +373,24 @@ body.night .glow-layer { opacity: 0; }
   gap: 8px;
   width: 100%;
   color: #fff;
-  background: rgb(50, 20, 25);
+  background: var(--accent-1);
   box-shadow: var(--shadow-btn);
 }
 
-.btn-primary:hover { filter: brightness(1.06); box-shadow: 0 14px 30px rgba(108, 99, 255, 0.36); transform: translateY(-2px); }
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 30px rgba(108, 99, 255, 0.36);
+  transform: translateY(-2px);
+}
 
-.btn-sparkle { display: inline-block; animation: sparkleSpin 3s linear infinite; }
+.btn-sparkle {
+  display: inline-block;
+  animation: sparkleSpin 3s linear infinite;
+}
 
 @keyframes sparkleSpin {
   0%, 100% { transform: rotate(0deg) scale(1); }
-  50%      { transform: rotate(180deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(1.2); }
 }
 
 .action-buttons {
@@ -391,7 +408,11 @@ body.night .glow-layer { opacity: 0; }
   padding: 12px 10px;
 }
 
-.btn-ghost:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(108, 99, 255, 0.16); }
+.btn-ghost:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(108, 99, 255, 0.16);
+}
 
 .btn-reset {
   grid-column: 1 / -1;
@@ -402,19 +423,21 @@ body.night .glow-layer { opacity: 0; }
   padding: 10px;
 }
 
-.btn-reset:hover { color: var(--ink); border-color: var(--ink-soft); }
+.btn-reset:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
 
-.card-back .btn-ghost, .card-back .btn-reset { color: var(--ink); }
-.card.flipped ~ .stars-layer.visible ~ * { color: inherit; }
-
-/* When night mode is active, restyle the back-face text/buttons for contrast */
+/* Night Mode Theme Adaptations */
 .night .card-back {
-  background: rgba(20, 18, 46, 0.55);
+  background: rgba(20, 18, 46, 0.65);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
 .night .card-back .message-content,
-.night .card-back .quote { color: #f3f0ff; }
+.night .card-back .quote {
+  color: #f3f0ff;
+}
 
 .night .card-back .btn-ghost {
   background: rgba(255, 255, 255, 0.12);
@@ -422,9 +445,11 @@ body.night .glow-layer { opacity: 0; }
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-.night .card-back .btn-reset { color: rgba(243, 240, 255, 0.8); border-color: rgba(255, 255, 255, 0.35); }
+.night .card-back .btn-reset {
+  color: rgba(243, 240, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.35);
+}
 
-/* "See the sticker slide" nudge at the bottom of the message face */
 .next-slide-btn {
   margin-top: 14px;
   align-self: center;
@@ -441,18 +466,20 @@ body.night .glow-layer { opacity: 0; }
   padding: 6px 4px;
 }
 
-.night .card-back .next-slide-btn { color: #cfc9f5; }
+.night .card-back .next-slide-btn {
+  color: #cfc9f5;
+}
 
 .next-slide-btn .chevron {
   display: inline-block;
   transition: transform 0.25s ease;
 }
 
-.next-slide-btn:hover .chevron { transform: translateX(4px); }
+.next-slide-btn:hover .chevron {
+  transform: translateX(4px);
+}
 
-/* ---------------------------------------------------------
-   BACK FACE — revealed message
-   --------------------------------------------------------- */
+/* --- Back Face Message --- */
 
 .message-content {
   font-size: 1.01rem;
@@ -487,11 +514,11 @@ body.night .glow-layer { opacity: 0; }
   transition: opacity 1s ease, color 0.8s ease;
 }
 
-.quote.visible { opacity: 1; }
+.quote.visible {
+  opacity: 1;
+}
 
-/* ---------------------------------------------------------
-   CONFETTI + SPARKLES
-   --------------------------------------------------------- */
+/* --- Overlays & Dynamic FX --- */
 
 .confetti-canvas {
   position: fixed;
@@ -509,14 +536,10 @@ body.night .glow-layer { opacity: 0; }
 }
 
 @keyframes sparklePop {
-  0%   { opacity: 0; transform: scale(0.3) rotate(0deg); }
-  30%  { opacity: 1; transform: scale(1.1) rotate(20deg); }
+  0% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  30% { opacity: 1; transform: scale(1.1) rotate(20deg); }
   100% { opacity: 0; transform: scale(0.6) translateY(-30px) rotate(-15deg); }
 }
-
-/* ---------------------------------------------------------
-   TOAST
-   --------------------------------------------------------- */
 
 .toast {
   position: fixed;
@@ -536,11 +559,12 @@ body.night .glow-layer { opacity: 0; }
   z-index: 80;
 }
 
-.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
-/* ---------------------------------------------------------
-   SLIDE 3 — SCRAPBOOK STICKER CARD
-   --------------------------------------------------------- */
+/* --- Slide 3 Scrapbook Card --- */
 
 .sticker-stage {
   position: fixed;
@@ -579,9 +603,13 @@ body.night .glow-layer { opacity: 0; }
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(46, 42, 74, 0.15);
   transition: transform 0.2s ease, background 0.2s ease;
+  z-index: 5;
 }
 
-.nav-arrow:hover { transform: translateY(-50%) translateX(-3px); background: #fff; }
+.nav-arrow:hover {
+  transform: translateY(-50%) translateX(-3px);
+  background: #fff;
+}
 
 .sticker-card {
   position: relative;
@@ -596,14 +624,12 @@ body.night .glow-layer { opacity: 0; }
   align-items: center;
   justify-content: center;
   gap: 26px;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(0, 0, 0, 0.05), transparent 40%),
-    radial-gradient(circle at 85% 75%, rgba(0, 0, 0, 0.05), transparent 45%),
-    linear-gradient(160deg, #f7f3ec, #efe9df 55%, #f7f3ec);
+  background: radial-gradient(circle at 15% 20%, rgba(0, 0, 0, 0.05), transparent 40%), 
+              radial-gradient(circle at 85% 75%, rgba(0, 0, 0, 0.05), transparent 45%), 
+              linear-gradient(160deg, #f7f3ec, #efe9df 55%, #f7f3ec);
   box-shadow: 0 24px 60px rgba(46, 42, 74, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
-/* subtle paper grain, generated with an inline SVG noise filter — no image request needed */
 .paper-grain {
   position: absolute;
   inset: 0;
@@ -613,7 +639,11 @@ body.night .glow-layer { opacity: 0; }
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
 }
 
-.sticker-deco { position: absolute; inset: 0; pointer-events: none; }
+.sticker-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 
 .deco {
   position: absolute;
@@ -621,12 +651,12 @@ body.night .glow-layer { opacity: 0; }
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
 }
 
-.d1 { top: 6%;  left: 6%;  font-size: 1.4rem; transform: rotate(-12deg); }
-.d2 { top: 5%;  left: 30%; font-size: 1.6rem; transform: rotate(-6deg); }
-.d3 { top: 4%;  right: 12%; font-size: 1.5rem; transform: rotate(10deg); }
+.d1 { top: 6%; left: 6%; font-size: 1.4rem; transform: rotate(-12deg); }
+.d2 { top: 5%; left: 30%; font-size: 1.6rem; transform: rotate(-6deg); }
+.d3 { top: 4%; right: 12%; font-size: 1.5rem; transform: rotate(10deg); }
 .d4 { top: 10%; right: 5%; font-size: 1.3rem; transform: rotate(8deg); }
 .d5 { bottom: 12%; left: 8%; font-size: 1.3rem; transform: rotate(-8deg); }
-.d6 { bottom: 8%;  right: 10%; font-size: 1.4rem; transform: rotate(10deg); }
+.d6 { bottom: 8%; right: 10%; font-size: 1.4rem; transform: rotate(10deg); }
 .d7 { bottom: 20%; right: 20%; font-size: 1.1rem; transform: rotate(-4deg); }
 
 .cutout-heading {
@@ -659,9 +689,14 @@ body.night .glow-layer { opacity: 0; }
   transition: transform 0.2s ease;
 }
 
-.cutout-letter.space { padding: 0 10px; box-shadow: none; }
+.cutout-letter.space {
+  padding: 0 10px;
+  box-shadow: none;
+}
 
-.cutout-row:last-child .cutout-letter { font-size: clamp(1.15rem, 5.2vw, 1.7rem); }
+.cutout-row:last-child .cutout-letter {
+  font-size: clamp(1.15rem, 5.2vw, 1.7rem);
+}
 
 .sticker-actions {
   position: relative;
@@ -672,30 +707,32 @@ body.night .glow-layer { opacity: 0; }
   width: 100%;
 }
 
-.sticker-actions .btn-reset { grid-column: 1 / -1; }
+.sticker-actions .btn-reset {
+  grid-column: 1 / -1;
+}
 
-/* ---------------------------------------------------------
-   RESPONSIVE
-   --------------------------------------------------------- */
+/* --- Responsiveness & Accessibility --- */
 
 @media (min-width: 560px) {
-  .input-pair { flex-direction: row; align-items: flex-end; }
-  .connector { height: auto; padding-bottom: 14px; flex-direction: column; width: 34px; }
-  .connector-line { max-width: none; width: 1.5px; height: 14px; background: linear-gradient(180deg, transparent, var(--accent-1), transparent); }
-  .action-buttons { grid-template-columns: 1fr 1fr 1fr; }
-  .btn-reset { grid-column: span 3; }
-  .sticker-actions { grid-template-columns: 1fr 1fr 1fr; }
-  .sticker-actions .btn-reset { grid-column: span 3; }
+  .input-pair {
+    flex-direction: row;
+  }
+  .input-group {
+    flex: 1;
+  }
+  .action-buttons {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .btn-reset {
+    grid-column: span 3;
+  }
+  .sticker-actions {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .sticker-actions .btn-reset {
+    grid-column: span 3;
+  }
 }
-
-@media (max-width: 359px) {
-  .card-face { padding: 28px 18px; }
-  .action-buttons { grid-template-columns: 1fr 1fr; }
-}
-
-/* ---------------------------------------------------------
-   ACCESSIBILITY
-   --------------------------------------------------------- */
 
 :focus-visible {
   outline: 2.5px solid var(--accent-1);
