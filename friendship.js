@@ -218,7 +218,6 @@ function initScratchCard() {
     const pixels = imageData.data;
     let clearedCount = 0;
 
-    // Check alpha channel on every 4th pixel for high efficiency
     for (let i = 3; i < pixels.length; i += 16) {
       if (pixels[i] === 0) {
         clearedCount++;
@@ -228,7 +227,6 @@ function initScratchCard() {
     const totalSampledPixels = pixels.length / 16;
     const percentageCleared = (clearedCount / totalSampledPixels) * 100;
 
-    // Auto-complete if 65% scratched off
     if (percentageCleared >= 65) {
       isCompleted = true;
       canvas.style.opacity = "0";
@@ -268,7 +266,7 @@ function claimCoupon(el) {
   }
 }
 
-// --- Card Rendering & Logic ---
+// --- Card Logic ---
 function buildMessageLines(friend, you) {
   return [
     `Dear ${friend},`,
@@ -353,6 +351,7 @@ function resetCard() {
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
+  window.location.hash = "";
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -452,6 +451,9 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
+  if (uploadedImageDataUrl) {
+    window.location.hash = "img=" + encodeURIComponent(uploadedImageDataUrl);
+  }
   return url.toString();
 }
 
@@ -499,7 +501,7 @@ async function shareCard() {
   }
 }
 
-// --- Offscreen Canvas Image Exporter ---
+// --- Canvas Text Line Helper ---
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
   let line = "";
@@ -518,6 +520,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
   return lines.length * lineHeight;
 }
 
+// --- Fixed Offscreen Canvas Image Exporter (Includes Polaroid Photo) ---
 async function downloadCard() {
   await Promise.all([
     document.fonts.load('700 60px "Dancing Script"'),
@@ -527,7 +530,9 @@ async function downloadCard() {
     document.fonts.load('400 22px "Poppins"')
   ]);
 
-  const W = 900, H = 1150;
+  const hasPhoto = !!uploadedImageDataUrl;
+  const W = 900;
+  const H = hasPhoto ? 1350 : 1150; // Dynamic height when photo is uploaded
   const off = document.createElement("canvas");
   off.width = W;
   off.height = H;
@@ -560,7 +565,7 @@ async function downloadCard() {
   }
 
   const pad = 60;
-  const panelX = pad, panelY = 90, panelW = W - pad * 2, panelH = H - 180;
+  const panelX = pad, panelY = 80, panelW = W - pad * 2, panelH = H - 160;
   const radius = 32;
   
   c.save();
@@ -583,20 +588,53 @@ async function downloadCard() {
   c.textAlign = "center";
   c.fillStyle = "#e0567a";
   c.font = "600 22px Poppins";
-  c.fillText("✨ Happy Friendship Day ✨", W / 2, panelY + 70);
+  c.fillText("✨ Happy Friendship Day ✨", W / 2, panelY + 60);
 
   c.fillStyle = textColor;
-  c.font = "700 56px 'Dancing Script'";
-  c.fillText("Happy Friendship Day 💙", W / 2, panelY + 150);
+  c.font = "700 52px 'Dancing Script'";
+  c.fillText("Happy Friendship Day 💙", W / 2, panelY + 130);
 
-  c.font = "400 22px Poppins";
-  c.fillStyle = state.isNight ? "#cfc9f5" : "#6b6490";
-  c.fillText("Some friendships make life more beautiful.", W / 2, panelY + 195);
+  let startBodyY = panelY + 220;
+
+  // Render Polaroid Image onto Downloaded PNG if available
+  if (hasPhoto) {
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const pWidth = 320;
+        const pHeight = 240;
+        const pX = (W - pWidth) / 2;
+        const pY = panelY + 170;
+
+        c.save();
+        c.shadowColor = "rgba(0,0,0,0.18)";
+        c.shadowBlur = 20;
+        c.shadowOffsetY = 10;
+        c.fillStyle = "#ffffff";
+        roundRect(c, pX, pY, pWidth, pHeight + 40, 12);
+        c.fill();
+        c.restore();
+
+        // Draw image fit inside frame
+        c.drawImage(img, pX + 12, pY + 12, pWidth - 24, pHeight - 24);
+
+        // Caption
+        c.fillStyle = "#333333";
+        c.font = "700 24px 'Dancing Script'";
+        c.fillText("Besties ✨", W / 2, pY + pHeight + 24);
+
+        startBodyY = pY + pHeight + 80;
+        resolve();
+      };
+      img.src = uploadedImageDataUrl;
+    });
+  }
 
   c.textAlign = "left";
   c.fillStyle = textColor;
   const lines = buildMessageLines(state.friendName, state.yourName);
-  let cursorY = panelY + 280;
+  let cursorY = startBodyY;
   const bodyX = panelX + 60;
   const bodyW = panelW - 120;
 
@@ -757,13 +795,22 @@ function initApp() {
   nextSlideBtn.addEventListener("click", showStickerSlide);
   stickerBackBtn.addEventListener("click", hideStickerSlide);
   stickerResetBtn.addEventListener("click", resetCard);
-  stickerDownloadBtn.addEventListener("click", downloadStickerCard);
+  stickerDownloadBtn.addEventListener("click", stickerDownloadBtn ? downloadStickerCard : null);
   stickerShareBtn.addEventListener("click", shareCard);
 
-  // Check URL Params for pre-filled cards
+  // Check URL Params & Hash Data for photos
   const urlParams = new URLSearchParams(window.location.search);
   const fromParam = urlParams.get("from");
   const toParam = urlParams.get("to");
+
+  if (window.location.hash.startsWith("#img=")) {
+    uploadedImageDataUrl = decodeURIComponent(window.location.hash.replace("#img=", ""));
+    const frontImg = document.getElementById("polaroidImg");
+    const backImg = document.getElementById("cardBackPolaroidImg");
+    if (frontImg) frontImg.src = uploadedImageDataUrl;
+    if (backImg) backImg.src = uploadedImageDataUrl;
+    document.getElementById("polaroidPreview").hidden = false;
+  }
 
   if (fromParam && toParam) {
     yourNameInput.value = fromParam;
