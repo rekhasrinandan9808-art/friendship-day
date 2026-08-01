@@ -42,18 +42,35 @@
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
 
-        <!-- FRONT FACE: greeting + single button -->
+        <!-- FRONT FACE: greeting + name inputs -->
         <section class="card-face card-front" id="cardFront">
           <p class="eyebrow">✨ A little something for a special someone</p>
           <h1 class="title">Happy Friendship&nbsp;Day <span class="title-heart">💙</span></h1>
           <p class="subtitle">Some friendships make life more beautiful.</p>
 
-          <!-- REMOVED: input fields, kept only the button -->
-          <div class="form" id="surpriseForm">
-            <button type="button" class="btn btn-primary" id="generateBtn">
-              <span>Open Your Surprise ✨</span>
+          <form class="form" id="surpriseForm" novalidate>
+            <div class="input-pair">
+              <div class="input-group">
+                <label for="yourName">Your name</label>
+                <input type="text" id="yourName" name="yourName" placeholder="Enter name " maxlength="30"
+                  autocomplete="off" />
+              </div>
+
+
+
+              <div class="input-group">
+                <label for="friendName">Friend's name</label>
+                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30"
+                  autocomplete="off" />
+              </div>
+            </div>
+
+            <p class="form-error" id="formError" role="alert">Please fill in both names </p>
+
+            <button type="submit" class="btn btn-primary" id="generateBtn">
+              <span>Generate Surprise</span> <span class="btn-sparkle">✨</span>
             </button>
-          </div>
+          </form>
         </section>
 
         <!-- BACK FACE: revealed message + actions -->
