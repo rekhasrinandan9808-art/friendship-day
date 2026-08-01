@@ -31,6 +31,8 @@ const soundToggle = document.getElementById("soundToggle");
 
 const ctx = confettiCanvas.getContext("2d");
 
+let uploadedImageDataUrl = null;
+
 const state = {
   yourName: "",
   friendName: "",
@@ -39,7 +41,7 @@ const state = {
   soundEnabled: true
 };
 
-// --- Web Audio Synthesizer (No External Files Required) ---
+// --- Web Audio Synthesizer ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playTone(freq, type, duration, gainValue = 0.1) {
@@ -58,9 +60,7 @@ function playTone(freq, type, duration, gainValue = 0.1) {
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
-  } catch (e) {
-    // Audio context fallback
-  }
+  } catch (e) {}
 }
 
 function playFlipSound() {
@@ -165,6 +165,105 @@ function stopNightMode() {
   starsLayer.querySelectorAll(".memory").forEach((m) => m.remove());
 }
 
+// --- FEATURE 1: Photo Polaroid Handler ---
+document.getElementById("photoUpload").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      uploadedImageDataUrl = event.target.result;
+      document.getElementById("polaroidImg").src = uploadedImageDataUrl;
+      document.getElementById("polaroidPreview").hidden = false;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// --- FEATURE 3: Interactive Scratch-Card Reveal Engine ---
+function initScratchCard() {
+  const canvas = document.getElementById("scratchCanvas");
+  if (!canvas) return;
+  const ctxScratch = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  
+  canvas.width = rect.width || 320;
+  canvas.height = rect.height || 220;
+
+  const grad = ctxScratch.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, "#d4af37");
+  grad.addColorStop(0.5, "#fff2a8");
+  grad.addColorStop(1, "#aa7c11");
+  ctxScratch.fillStyle = grad;
+  ctxScratch.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctxScratch.fillStyle = "#4a3b10";
+  ctxScratch.font = "bold 15px Poppins";
+  ctxScratch.textAlign = "center";
+  ctxScratch.fillText("✨ Scratch to Reveal Message! ✨", canvas.width / 2, canvas.height / 2);
+
+  let isScratching = false;
+
+  function scratch(e) {
+    if (!isScratching) return;
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - r.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - r.top;
+
+    ctxScratch.globalCompositeOperation = "destination-out";
+    ctxScratch.beginPath();
+    ctxScratch.arc(x, y, 22, 0, Math.PI * 2);
+    ctxScratch.fill();
+  }
+
+  ["mousedown", "touchstart"].forEach(evt => canvas.addEventListener(evt, (e) => { isScratching = true; scratch(e); }));
+  ["mousemove", "touchmove"].forEach(evt => canvas.addEventListener(evt, scratch));
+  ["mouseup", "touchend"].forEach(evt => canvas.addEventListener(evt, () => { isScratching = false; }));
+}
+
+// --- FEATURE 4: Secret Quiz Lock Logic ---
+function appendQuizToUrl(url) {
+  const q = document.getElementById("quizQuestion").value.trim();
+  const a = document.getElementById("quizAnswer").value.trim().toLowerCase();
+  if (q && a) {
+    url.searchParams.set("q", btoa(q));
+    url.searchParams.set("a", btoa(a));
+  }
+}
+
+function checkUrlQuiz() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("q") && params.has("a")) {
+    try {
+      const question = atob(params.get("q"));
+      const correctAnswer = atob(params.get("a"));
+
+      const overlay = document.getElementById("quizOverlay");
+      document.getElementById("displayQuizQuestion").textContent = question;
+      overlay.hidden = false;
+
+      document.getElementById("submitQuizBtn").onclick = () => {
+        const userAns = document.getElementById("userQuizInput").value.trim().toLowerCase();
+        if (userAns === correctAnswer) {
+          overlay.hidden = true;
+          showToast("Unlocked successfully! 🎉");
+        } else {
+          document.getElementById("quizError").classList.add("visible");
+        }
+      };
+    } catch(e) {}
+  }
+}
+
+// --- FEATURE 5: Friendship Coupon Handler ---
+function claimCoupon(el) {
+  if (!el.classList.contains("claimed")) {
+    el.classList.add("claimed");
+    el.querySelector(".stamp").textContent = "CLAIMED! 🎟️";
+    burstSparkles();
+    showToast("Coupon Redeemed! 🥳");
+  }
+}
+
 // --- Card Rendering & Logic ---
 function buildMessageLines(friend, you) {
   return [
@@ -201,10 +300,16 @@ function revealSurprise(you, friend, updateUrl = true) {
   state.yourName = you;
   state.friendName = friend;
 
+  if (uploadedImageDataUrl) {
+    document.getElementById("cardBackPolaroidImg").src = uploadedImageDataUrl;
+    document.getElementById("cardBackPolaroid").hidden = false;
+  }
+
   if (updateUrl) {
     const url = new URL(window.location.href);
     url.searchParams.set("from", you);
     url.searchParams.set("to", friend);
+    appendQuizToUrl(url);
     window.history.pushState({}, "", url);
   }
 
@@ -213,6 +318,7 @@ function revealSurprise(you, friend, updateUrl = true) {
   playFlipSound();
 
   setTimeout(() => {
+    initScratchCard();
     burstConfetti(window.innerWidth / 2, window.innerHeight / 2.4);
     burstSparkles();
     startNightMode();
@@ -243,10 +349,15 @@ function resetCard() {
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
+  url.searchParams.delete("q");
+  url.searchParams.delete("a");
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
     form.reset();
+    document.getElementById("polaroidPreview").hidden = true;
+    document.getElementById("cardBackPolaroid").hidden = true;
+    uploadedImageDataUrl = null;
     formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
@@ -339,6 +450,7 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
+  appendQuizToUrl(url);
   return url.toString();
 }
 
@@ -375,9 +487,7 @@ async function shareCard() {
   if (navigator.share) {
     try {
       await navigator.share(shareData);
-    } catch (err) {
-      // User cancelled share
-    }
+    } catch (err) {}
   } else {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -601,13 +711,6 @@ async function downloadStickerCard() {
   grad.addColorStop(1, "#f7f3ec");
   c.fillStyle = grad;
   c.fillRect(0, 0, W, H);
-  
-  c.fillStyle = "rgba(0,0,0,0.04)";
-  for (let i = 0; i < 40; i++) {
-    c.beginPath();
-    c.arc(Math.random() * W, Math.random() * H, Math.random() * 60 + 10, 0, Math.PI * 2);
-    c.fill();
-  }
 
   c.textAlign = "center";
   c.font = "40px serif";
@@ -621,59 +724,20 @@ async function downloadStickerCard() {
   ];
   deco.forEach(([emoji, x, y]) => c.fillText(emoji, x, y));
 
-  function drawCutoutWord(word, centerY, fontSize) {
-    c.font = `800 ${fontSize}px Poppins`;
-    const letters = word.split("");
-    const gap = fontSize * 0.18;
-    const widths = letters.map((ch) => (ch === " " ? fontSize * 0.5 : c.measureText(ch).width + fontSize * 0.5));
-    const totalW = widths.reduce((a, b) => a + b + gap, -gap);
-    let x = W / 2 - totalW / 2;
-
-    letters.forEach((ch, i) => {
-      const w = widths[i];
-      if (ch !== " ") {
-        const swatch = CUTOUT_SWATCHES[Math.floor(Math.random() * CUTOUT_SWATCHES.length)];
-        const rot = (Math.random() * 12 - 6) * (Math.PI / 180);
-        
-        c.save();
-        c.translate(x + w / 2, centerY);
-        c.rotate(rot);
-        
-        c.shadowColor = "rgba(0,0,0,0.22)";
-        c.shadowBlur = 8;
-        c.shadowOffsetY = 4;
-        c.fillStyle = swatch.bg;
-        roundRect(c, -w / 2, -fontSize * 0.6, w, fontSize * 1.1, 6);
-        c.fill();
-        
-        c.shadowColor = "transparent";
-        c.fillStyle = swatch.fg;
-        c.textAlign = "center";
-        c.textBaseline = "middle";
-        c.fillText(ch, 0, 0);
-        c.restore();
-      }
-      x += w + gap;
-    });
-  }
-
-  drawCutoutWord("HAPPY", H * 0.38, 70);
-  drawCutoutWord("FRIENDSHIP DAY", H * 0.58, 50);
-
   off.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "scrapbook-friendship-day.png";
+    a.download = `friendship-scrapbook.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    showToast("Scrapbook card downloaded ⬇️");
+    showToast("Scrapbook downloaded ⬇️");
   }, "image/png");
 }
 
-// --- Application Initialization & Deep Link Resolution ---
+// --- Event Listeners Initialization ---
 function initApp() {
   resizeConfettiCanvas();
   window.addEventListener("resize", resizeConfettiCanvas);
@@ -682,7 +746,6 @@ function initApp() {
   initStars();
   initStickerSlide();
 
-  // Event Listeners
   form.addEventListener("submit", handleGenerate);
   resetBtn.addEventListener("click", resetCard);
   copyBtn.addEventListener("click", copyMessage);
@@ -696,19 +759,18 @@ function initApp() {
   stickerDownloadBtn.addEventListener("click", downloadStickerCard);
   stickerShareBtn.addEventListener("click", shareCard);
 
-  // Deep Link Handling (Auto-Reveals Card if Shared via URL parameters)
-  const params = new URLSearchParams(window.location.search);
-  const fromName = params.get("from");
-  const toName = params.get("to");
+  // Check URL Params for pre-filled cards
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  const toParam = urlParams.get("to");
 
-  if (fromName && toName) {
-    yourNameInput.value = fromName;
-    friendNameInput.value = toName;
-    revealSurprise(fromName, toName, false);
-  } else {
-    yourNameInput.focus();
+  if (fromParam && toParam) {
+    yourNameInput.value = fromParam;
+    friendNameInput.value = toParam;
+    revealSurprise(fromParam, toParam, false);
   }
+
+  checkUrlQuiz();
 }
 
-// Kick off app lifecycle
 document.addEventListener("DOMContentLoaded", initApp);
