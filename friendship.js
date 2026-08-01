@@ -12,9 +12,7 @@ const confettiCanvas  = document.getElementById("confettiCanvas");
 const card            = document.getElementById("card");
 const cardContainer   = document.getElementById("cardContainer");
 const form            = document.getElementById("surpriseForm");
-const yourNameInput   = document.getElementById("yourName");
-const friendNameInput = document.getElementById("friendName");
-const formError       = document.getElementById("formError");
+const generateBtn     = document.getElementById("generateBtn");
 const messageContent  = document.getElementById("messageContent");
 const quoteEl         = document.getElementById("quote");
 const copyBtn         = document.getElementById("copyBtn");
@@ -33,8 +31,12 @@ const cutoutRow2      = document.getElementById("cutoutRow2");
 
 const ctx = confettiCanvas.getContext("2d");
 
+// Fixed names - Nandan and Rishitha
+const YOUR_NAME = "Nandan";
+const FRIEND_NAME = "Rishitha";
+
 // Small bit of shared state so download/share/copy always match what's on screen
-const state = { yourName: "", friendName: "", isNight: false, memoryTimer: null };
+const state = { yourName: YOUR_NAME, friendName: FRIEND_NAME, isNight: false, memoryTimer: null };
 
 /* =========================================================
    1. AMBIENT FLOATING ICONS (hearts / stars / smileys)
@@ -53,7 +55,7 @@ function initFloatingAmbient() {
     span.style.left = Math.random() * 100 + "vw";
     span.style.fontSize = size + "px";
     span.style.animationDuration = duration + "s";
-    span.style.animationDelay = -delay + "s"; // negative delay = already mid-flight on load
+    span.style.animationDelay = -delay + "s";
     span.style.setProperty("--drift", drift);
     floatingLayer.appendChild(span);
   }
@@ -111,7 +113,7 @@ function stopNightMode() {
 }
 
 /* =========================================================
-   3. FORM VALIDATION + FLIP REVEAL
+   3. FLIP REVEAL (no form validation, uses fixed names)
    ========================================================= */
 function buildMessageLines(friend, you) {
   return [
@@ -128,7 +130,7 @@ function buildQuote(friend) {
 }
 
 function renderMessage(friend, you) {
-  messageContent.innerHTML = ""; // safe: only our own template strings + escaped names go in via textContent below
+  messageContent.innerHTML = "";
   const lines = buildMessageLines(friend, you);
 
   lines.forEach((text, i) => {
@@ -144,21 +146,9 @@ function renderMessage(friend, you) {
   setTimeout(() => quoteEl.classList.add("visible"), 0.25 + lines.length * 280 + 300);
 }
 
-function handleGenerate(e) {
-  e.preventDefault();
-  const you = yourNameInput.value.trim();
-  const friend = friendNameInput.value.trim();
-
-  if (!you || !friend) {
-    formError.classList.add("visible");
-    card.classList.add("shake");
-    setTimeout(() => card.classList.remove("shake"), 450);
-    return;
-  }
-  formError.classList.remove("visible");
-
-  state.yourName = you;
-  state.friendName = friend;
+function handleGenerate() {
+  const you = state.yourName;
+  const friend = state.friendName;
 
   renderMessage(friend, you);
   card.classList.add("flipped");
@@ -176,12 +166,9 @@ function resetCard() {
   card.classList.remove("flipped");
   stopNightMode();
   setTimeout(() => {
-    form.reset();
-    formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
     quoteEl.textContent = "";
-    yourNameInput.focus();
   }, 500);
 }
 
@@ -223,7 +210,7 @@ function burstConfetti(originX, originY) {
     particles.forEach((p) => {
       if (p.life <= 0) return;
       alive = true;
-      p.vy += 0.12; // gravity
+      p.vy += 0.12;
       p.x += p.vx;
       p.y += p.vy;
       p.rotation += p.vr;
@@ -288,7 +275,6 @@ async function copyMessage() {
     await navigator.clipboard.writeText(text);
     showToast("Message copied 📋");
   } catch (err) {
-    // Fallback for older browsers / no clipboard permission
     const ta = document.createElement("textarea");
     ta.value = text;
     ta.style.position = "fixed";
@@ -306,9 +292,7 @@ async function shareCard() {
   if (navigator.share) {
     try {
       await navigator.share({ title: "Happy Friendship Day 💙", text });
-    } catch (err) {
-      // user cancelled the share sheet — no action needed
-    }
+    } catch (err) {}
   } else {
     try {
       await navigator.clipboard.writeText(text);
@@ -320,7 +304,7 @@ async function shareCard() {
 }
 
 /* =========================================================
-   6. DOWNLOAD CARD AS PNG (drawn fresh on an offscreen canvas)
+   6. DOWNLOAD CARD AS PNG
    ========================================================= */
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
@@ -341,7 +325,6 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 async function downloadCard() {
-  // make sure the custom fonts are actually ready before we measure/draw text
   await Promise.all([
     document.fonts.load('700 60px "Dancing Script"'),
     document.fonts.load('600 30px "Dancing Script"'),
@@ -356,7 +339,6 @@ async function downloadCard() {
   off.height = H;
   const c = off.getContext("2d");
 
-  // Background — matches whichever mode the card is currently in
   let bgGrad;
   if (state.isNight) {
     bgGrad = c.createLinearGradient(0, 0, 0, H);
@@ -364,7 +346,6 @@ async function downloadCard() {
     bgGrad.addColorStop(1, "#0b1030");
     c.fillStyle = bgGrad;
     c.fillRect(0, 0, W, H);
-    // simple stars
     c.fillStyle = "#fdf6e3";
     for (let i = 0; i < 140; i++) {
       const r = Math.random() * 1.6 + 0.4;
@@ -383,7 +364,6 @@ async function downloadCard() {
     c.fillRect(0, 0, W, H);
   }
 
-  // Glass card panel
   const pad = 60;
   const panelX = pad, panelY = 90, panelW = W - pad * 2, panelH = H - 180;
   const radius = 32;
@@ -404,7 +384,6 @@ async function downloadCard() {
   const textColor = state.isNight ? "#f3f0ff" : "#2e2a4a";
   const accent = "#6c63ff";
 
-  // Heading
   c.textAlign = "center";
   c.fillStyle = "#e0567a";
   c.font = "600 22px Poppins";
@@ -418,7 +397,6 @@ async function downloadCard() {
   c.fillStyle = state.isNight ? "#cfc9f5" : "#6b6490";
   c.fillText("Some friendships make life more beautiful.", W / 2, panelY + 195);
 
-  // Message body
   c.textAlign = "left";
   c.font = "400 26px Poppins";
   c.fillStyle = textColor;
@@ -441,13 +419,11 @@ async function downloadCard() {
     cursorY += wrapText(c, line, bodyX, cursorY, bodyW, 38) + 14;
   });
 
-  // Quote
   c.font = "italic 500 24px 'Dancing Script'";
   c.fillStyle = accent;
   cursorY += 20;
   cursorY += wrapText(c, buildQuote(state.friendName), bodyX, cursorY, bodyW, 34);
 
-  // Footer mark
   c.textAlign = "center";
   c.font = "400 16px Poppins";
   c.fillStyle = state.isNight ? "rgba(243,240,255,0.6)" : "rgba(107,100,144,0.7)";
@@ -480,8 +456,6 @@ function roundRect(c, x, y, w, h, r) {
    7. SLIDE 3 — SCRAPBOOK STICKER CARD
    ========================================================= */
 
-// A handful of paper-cutout "swatches" (bg + text colour) and font treatments,
-// mixed together so each letter looks like it was snipped from a different magazine.
 const CUTOUT_SWATCHES = [
   { bg: "#f4e9da", fg: "#1f1b1b" },
   { bg: "#e9553b", fg: "#ffffff" },
@@ -548,7 +522,6 @@ async function downloadStickerCard() {
   off.height = H;
   const c = off.getContext("2d");
 
-  // paper base
   const grad = c.createLinearGradient(0, 0, W, H);
   grad.addColorStop(0, "#f7f3ec");
   grad.addColorStop(0.55, "#efe9df");
@@ -562,7 +535,6 @@ async function downloadStickerCard() {
     c.fill();
   }
 
-  // decorative emoji
   c.textAlign = "center";
   c.font = "40px serif";
   const deco = [
@@ -572,7 +544,6 @@ async function downloadStickerCard() {
   deco.forEach(([emoji, x, y]) => c.fillText(emoji, x, y));
 
   function drawCutoutWord(word, centerY, fontSize) {
-    // measure total width first so the word can be centred
     c.font = `800 ${fontSize}px Poppins`;
     const letters = word.split("");
     const gap = fontSize * 0.18;
@@ -594,4 +565,42 @@ async function downloadStickerCard() {
         c.shadowBlur = 6;
         c.shadowOffsetY = 3;
         c.fillStyle = swatch.bg;
-        roundRect
+        roundRect(c, -w / 2, -fontSize * 0.62, w, fontSize * 1.05, 4);
+        c.fill();
+        c.shadowColor = "transparent";
+        c.fillStyle = swatch.fg;
+        c.font = `800 ${fontSize}px ${CUTOUT_FONTS[Math.floor(Math.random() * CUTOUT_FONTS.length)].fontFamily}`;
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillText(ch, 0, 2);
+        c.restore();
+        x += w + gap;
+      } else {
+        x += w + gap;
+      }
+    });
+  }
+
+  drawCutoutWord("HAPPY", H * 0.35, 72);
+  drawCutoutWord("FRIENDSHIP DAY", H * 0.6, 48);
+
+  off.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sticker-${(state.friendName || "friend").toLowerCase().replace(/\s+/g, "-")}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("Sticker downloaded ⬇️");
+  }, "image/png");
+}
+
+/* =========================================================
+   8. EVENT LISTENERS
+   ========================================================= */
+generateBtn.addEventListener("click", handleGenerate);
+
+copyBtn.addEventListener("click", copyMessage);
+shareBtn.addEventLi
