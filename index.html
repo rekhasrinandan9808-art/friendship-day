@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="friendship.css" />
 </head>
 <body>
+  <!-- Ambient & Background FX Layers -->
   <div class="gradient-bg" id="gradientBg"></div>
   
   <div class="glow-layer" id="glowLayer" aria-hidden="true">
@@ -23,9 +24,16 @@
   <div class="floating-layer" id="floatingLayer"></div>
   <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 
+  <!-- Sound Toggle Control -->
+  <button class="sound-toggle" id="soundToggle" type="button" aria-label="Toggle Sound Effects">
+    🔊
+  </button>
+
+  <!-- Main 3D Card Stage -->
   <main class="stage">
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
+        
         <!-- FRONT FACE -->
         <section class="card-face card-front" id="cardFront">
           <p class="eyebrow">✨ A little something for a special someone</p>
@@ -64,6 +72,7 @@
             One more surprise <span class="chevron">›</span>
           </button>
         </section>
+
       </div>
     </div>
   </main>
