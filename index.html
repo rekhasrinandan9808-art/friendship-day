@@ -3,98 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Happy Friendship Day 💙</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>Happy Friendship Day!</title>
   <link rel="stylesheet" href="friendship.css" />
 </head>
 <body>
-  <div class="gradient-bg" id="gradientBg"></div>
-  
-  <div class="glow-layer" id="glowLayer" aria-hidden="true">
-    <span class="glow-blob blob-1"></span>
-    <span class="glow-blob blob-2"></span>
-    <span class="glow-blob blob-3"></span>
-    <span class="glow-blob blob-4"></span>
-  </div>
 
-  <div class="stars-layer" id="starsLayer"></div>
-  <div class="floating-layer" id="floatingLayer"></div>
-  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+  <div class="main-wrapper">
+    <div class="card-container">
+      <div class="card-inner" id="cardCube">
+        
+        <!-- STAGE 1: Creation Form (Front) -->
+        <section class="card-face card-front">
+          <div class="card-header">
+            <h2>Create Friendship Card 💌</h2>
+            <p>Personalize your message and photos</p>
+          </div>
 
-  <main class="stage">
-    <div class="card-container" id="cardContainer">
-      <div class="card" id="card">
-        <!-- FRONT FACE -->
-        <section class="card-face card-front" id="cardFront">
-          <p class="eyebrow">✨ A little something for a special someone</p>
-          <h1 class="title">Happy Friendship&nbsp;Day <span class="title-heart">💙</span></h1>
-          <p class="subtitle">Some friendships make life more beautiful.</p>
-          <form class="form" id="surpriseForm" novalidate>
-            <div class="input-pair">
-              <div class="input-group">
-                <label for="yourName">Your name</label>
-                <input type="text" id="yourName" name="yourName" placeholder="Enter name" maxlength="30" autocomplete="off" />
-              </div>
-              <div class="input-group">
-                <label for="friendName">Friend's name</label>
-                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30" autocomplete="off" />
-              </div>
+          <form id="cardForm" class="card-form">
+            <div class="form-group">
+              <label for="senderName">Your Name</label>
+              <input type="text" id="senderName" placeholder="e.g. Alex" required />
             </div>
-            <p class="form-error" id="formError" role="alert">Please fill in both names</p>
-            <button type="submit" class="btn btn-primary" id="generateBtn">
-              <span>Generate Surprise</span>
-              <span class="btn-sparkle">✨</span>
-            </button>
+
+            <div class="form-group">
+              <label for="friendName">Friend's Name</label>
+              <input type="text" id="friendName" placeholder="e.g. Sam" required />
+            </div>
+
+            <div class="form-group">
+              <label for="photoUpload">Upload Memories 📸 (Up to 3)</label>
+              <input type="file" id="photoUpload" accept="image/*" multiple />
+            </div>
+
+            <button type="submit" class="btn-primary">Reveal Card ✨</button>
           </form>
         </section>
 
-        <!-- BACK FACE -->
-        <section class="card-face card-back" id="cardBack">
-          <div class="message-content" id="messageContent"></div>
-          <p class="quote" id="quote"></p>
-          <div class="action-buttons">
-            <button class="btn btn-ghost" id="copyBtn" type="button">📋 Copy message</button>
-            <button class="btn btn-ghost" id="downloadBtn" type="button">⬇️ Download card</button>
-            <button class="btn btn-ghost" id="shareBtn" type="button">🔗 Share link</button>
-            <button class="btn btn-reset" id="resetBtn" type="button">↺ Create new</button>
+        <!-- STAGE 2: Personal Greeting (1st Flip) -->
+        <section class="card-face card-greeting">
+          <div class="card-body">
+            <span class="badge">Happy Friendship Day</span>
+            <h2 id="greetingTitle">Happy Friendship Day, Friend! 🎉</h2>
+            <p id="greetingText">
+              Thank you for being such an incredible person in my life. Every moment shared together is a cherished memory!
+            </p>
+            <p class="signature" id="greetingFrom">— With love, Someone Special</p>
           </div>
-          <button class="next-slide-btn" id="nextSlideBtn" type="button">
-            One more surprise <span class="chevron">›</span>
-          </button>
-        </section>
-      </div>
-    </div>
-  </main>
 
-  <!-- SLIDE 3: Scrapbook Sticker Card -->
-  <div class="sticker-stage" id="stickerStage">
-    <button class="nav-arrow nav-back" id="stickerBackBtn" type="button" aria-label="Back to your message">‹</button>
-    <div class="sticker-card" id="stickerCard">
-      <div class="paper-grain" aria-hidden="true"></div>
-      <div class="sticker-deco" aria-hidden="true">
-        <span class="deco d1">❤️</span>
-        <span class="deco d2">⭐</span>
-        <span class="deco d3">⭐</span>
-        <span class="deco d4">💛</span>
-        <span class="deco d5">✨</span>
-        <span class="deco d6">🩷</span>
-        <span class="deco d7">💫</span>
-      </div>
-      <div class="cutout-heading" id="cutoutHeading">
-        <div class="cutout-row" id="cutoutRow1"></div>
-        <div class="cutout-row" id="cutoutRow2"></div>
-      </div>
-      <div class="sticker-actions">
-        <button class="btn btn-ghost" id="stickerDownloadBtn" type="button">⬇️ Download</button>
-        <button class="btn btn-ghost" id="stickerShareBtn" type="button">🔗 Share link</button>
-        <button class="btn btn-reset" id="stickerResetBtn" type="button">↺ Create new</button>
+          <div class="card-footer">
+            <button type="button" class="btn-next" id="toPhotosBtn">
+              See Our Memories 📸 ➔
+            </button>
+          </div>
+        </section>
+
+        <!-- STAGE 3: Photo Memories Wall (2nd Flip) -->
+        <section class="card-face card-photos">
+          <div class="card-header">
+            <h2>Our Favorite Moments 💖</h2>
+          </div>
+
+          <div class="photo-gallery" id="photoGallery">
+            <!-- Uploaded photos render here dynamically -->
+            <p class="empty-photos-text" id="emptyPhotosMsg">No photos added, but memories remain forever! ✨</p>
+          </div>
+
+          <div class="action-buttons">
+            <button type="button" class="btn-secondary" id="backToGreetingBtn">
+              ⬅️ Message
+            </button>
+            <button type="button" class="btn-secondary" id="restartBtn">
+              🔄 Create New
+            </button>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
   <script src="friendship.js"></script>
 </body>
 </html>
