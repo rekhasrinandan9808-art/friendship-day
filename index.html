@@ -1,727 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Happy Friendship Day 💙</title>
+
+  <!-- Google Fonts: Dancing Script for emotional display text, Poppins for clean UI text -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
-  <style>
-    /* ---------- RESET & BASE ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f0ecf9;
-      padding: 20px;
-      overflow-x: hidden;
-      transition: background 0.8s ease;
-      position: relative;
-    }
-    body.night {
-      background: #14102e;
-    }
-
-    /* ---------- GRADIENT BG ---------- */
-    .gradient-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background: linear-gradient(135deg, #fdf6f0 0%, #f0ecf9 40%, #fdeaf2 80%);
-      transition: background 0.8s ease;
-    }
-    .gradient-bg.night {
-      background: linear-gradient(135deg, #1b1450 0%, #0b1030 100%);
-    }
-
-    /* glow blobs */
-    .glow-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .glow-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.45;
-      animation: blobFloat 18s ease-in-out infinite alternate;
-    }
-    .blob-1 {
-      width: 400px;
-      height: 400px;
-      background: #b8a9f0;
-      top: -80px;
-      left: -60px;
-    }
-    .blob-2 {
-      width: 350px;
-      height: 350px;
-      background: #f7b0c4;
-      bottom: -60px;
-      right: -40px;
-      animation-delay: 4s;
-    }
-    .blob-3 {
-      width: 280px;
-      height: 280px;
-      background: #aad0f5;
-      top: 40%;
-      right: -30px;
-      animation-delay: 8s;
-    }
-    .blob-4 {
-      width: 300px;
-      height: 300px;
-      background: #fce38a;
-      bottom: 20%;
-      left: -50px;
-      animation-delay: 12s;
-    }
-    body.night .glow-blob {
-      opacity: 0.2;
-      filter: blur(100px);
-    }
-    @keyframes blobFloat {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(40px, -30px) scale(1.2); }
-    }
-
-    /* ---------- STARS ---------- */
-    .stars-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 1.2s ease;
-    }
-    .stars-layer.visible {
-      opacity: 1;
-    }
-    .star {
-      position: absolute;
-      background: #fdf6e3;
-      border-radius: 50%;
-      animation: twinkle 2.5s ease-in-out infinite alternate;
-    }
-    @keyframes twinkle {
-      0% { opacity: 0.2; transform: scale(0.8); }
-      100% { opacity: 1; transform: scale(1.2); }
-    }
-    .memory {
-      position: absolute;
-      font-size: 28px;
-      animation: memoryDrift 12s linear forwards;
-      opacity: 0.7;
-      pointer-events: none;
-    }
-    @keyframes memoryDrift {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
-      100% { transform: translateY(-120vh) rotate(720deg); opacity: 0; }
-    }
-
-    /* ---------- FLOATING AMBIENT ---------- */
-    .floating-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .floaty {
-      position: absolute;
-      animation: floatyMove 16s linear infinite alternate;
-      opacity: 0.25;
-      user-select: none;
-    }
-    @keyframes floatyMove {
-      0% { transform: translate(0, 0) scale(0.9); opacity: 0.2; }
-      100% { transform: translate(var(--drift), -60px) scale(1.1); opacity: 0.4; }
-    }
-
-    /* ---------- CONFETTI CANVAS ---------- */
-    .confetti-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      pointer-events: none;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ---------- CARD CONTAINER ---------- */
-    .stage {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 580px;
-      perspective: 1200px;
-    }
-
-    .card-container {
-      width: 100%;
-      min-height: 520px;
-      transition: transform 0.4s ease;
-    }
-
-    .card {
-      position: relative;
-      width: 100%;
-      min-height: 500px;
-      transform-style: preserve-3d;
-      transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-      border-radius: 40px 16px 40px 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
-    }
-    .card.flipped {
-      transform: rotateY(180deg);
-    }
-    .card.shake {
-      animation: shake 0.4s ease;
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-12px); }
-      75% { transform: translateX(12px); }
-    }
-
-    .card-face {
-      position: relative;
-      backface-visibility: hidden;
-      width: 100%;
-      padding: 40px 32px 32px;
-      border-radius: 40px 16px 40px 16px;
-      background: rgba(255, 255, 255, 0.78);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-      transition: background 0.4s ease;
-    }
-    body.night .card-face {
-      background: rgba(25, 20, 55, 0.85);
-      border-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .card-front {
-      transform: rotateY(0deg);
-    }
-    .card-back {
-      position: absolute;
-      inset: 0;
-      transform: rotateY(180deg);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    /* ---------- FRONT FACE ---------- */
-    .eyebrow {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #7a72a0;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    body.night .eyebrow {
-      color: #b0a8d0;
-    }
-
-    .title {
-      font-family: 'Dancing Script', cursive;
-      font-size: 2.8rem;
-      font-weight: 700;
-      color: #2e2a4a;
-      line-height: 1.2;
-      margin-bottom: 4px;
-    }
-    .title-heart {
-      color: #e0567a;
-      display: inline-block;
-      animation: heartBeat 1.8s ease-in-out infinite;
-    }
-    @keyframes heartBeat {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-    body.night .title {
-      color: #f0ecff;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-      color: #6b6490;
-      margin-bottom: 24px;
-      font-weight: 300;
-    }
-    body.night .subtitle {
-      color: #b0a8d0;
-    }
-
-    .form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .input-pair {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .input-group {
-      flex: 1;
-      min-width: 130px;
-    }
-    .input-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #4a4570;
-      margin-bottom: 3px;
-    }
-    body.night .input-group label {
-      color: #b8b0d8;
-    }
-    .input-group input {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 30px;
-      border: 1.5px solid #ddd8f0;
-      background: rgba(255, 255, 255, 0.5);
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.95rem;
-      transition: border 0.2s, box-shadow 0.2s;
-      outline: none;
-      color: #1f1b3a;
-    }
-    .input-group input:focus {
-      border-color: #6c63ff;
-      box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.15);
-    }
-    body.night .input-group input {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: #3a3560;
-      color: #f0ecff;
-    }
-    body.night .input-group input:focus {
-      border-color: #8a82ff;
-    }
-
-    .form-error {
-      font-size: 0.85rem;
-      color: #e0567a;
-      height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.25s, height 0.3s;
-      margin: -4px 0 0;
-    }
-    .form-error.visible {
-      height: 24px;
-      opacity: 1;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 28px;
-      border-radius: 40px;
-      border: none;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      background: #6c63ff;
-      color: white;
-      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(108, 99, 255, 0.4);
-    }
-    .btn:active {
-      transform: translateY(0);
-    }
-    .btn-primary {
-      background: #6c63ff;
-      color: #fff;
-    }
-    .btn-ghost {
-      background: rgba(108, 99, 255, 0.1);
-      color: #4a4570;
-      box-shadow: none;
-      font-weight: 500;
-      font-size: 0.9rem;
-      padding: 8px 18px;
-    }
-    .btn-ghost:hover {
-      background: rgba(108, 99, 255, 0.2);
-      transform: translateY(-1px);
-      box-shadow: none;
-    }
-    body.night .btn-ghost {
-      color: #c8c0f0;
-      background: rgba(255, 255, 255, 0.06);
-    }
-    body.night .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
-    .btn-reset {
-      background: rgba(224, 86, 122, 0.1);
-      color: #c24a6a;
-    }
-    .btn-reset:hover {
-      background: rgba(224, 86, 122, 0.2);
-    }
-    body.night .btn-reset {
-      color: #f09ab0;
-      background: rgba(224, 86, 122, 0.12);
-    }
-    body.night .btn-reset:hover {
-      background: rgba(224, 86, 122, 0.2);
-    }
-
-    .btn-sparkle {
-      font-size: 1.2rem;
-    }
-
-    /* ---------- BACK FACE ---------- */
-    .message-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
-      min-height: 160px;
-    }
-    .line {
-      font-size: 1.1rem;
-      font-weight: 400;
-      color: #2e2a4a;
-      opacity: 0;
-      animation: fadeSlideUp 0.5s ease forwards;
-    }
-    .line.signature {
-      font-family: 'Dancing Script', cursive;
-      font-size: 1.7rem;
-      font-weight: 600;
-      color: #6c63ff;
-      margin-top: 6px;
-    }
-    body.night .line {
-      color: #e8e4ff;
-    }
-    body.night .line.signature {
-      color: #a89eff;
-    }
-    @keyframes fadeSlideUp {
-      0% { opacity: 0; transform: translateY(16px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    .quote {
-      font-family: 'Dancing Script', cursive;
-      font-size: 1.15rem;
-      color: #6c63ff;
-      text-align: center;
-      opacity: 0;
-      transition: opacity 0.7s ease;
-      padding: 8px 0;
-      font-weight: 500;
-      min-height: 50px;
-    }
-    .quote.visible {
-      opacity: 1;
-    }
-    body.night .quote {
-      color: #b0a6ff;
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin: 6px 0 12px;
-    }
-
-    .next-slide-btn {
-      background: none;
-      border: none;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.95rem;
-      color: #6c63ff;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 30px;
-      transition: background 0.2s;
-      font-weight: 500;
-      margin-top: 4px;
-    }
-    .next-slide-btn:hover {
-      background: rgba(108, 99, 255, 0.08);
-    }
-    .chevron {
-      font-size: 1.4rem;
-      line-height: 1;
-      transition: transform 0.2s;
-    }
-    .next-slide-btn:hover .chevron {
-      transform: translateX(4px);
-    }
-    body.night .next-slide-btn {
-      color: #b0a6ff;
-    }
-    body.night .next-slide-btn:hover {
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    /* ---------- STICKER STAGE (slide 3) ---------- */
-    .sticker-stage {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(12px);
-      padding: 20px;
-      animation: fadeIn 0.5s ease;
-    }
-    .sticker-stage.open {
-      display: flex;
-    }
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: scale(0.94); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    .nav-arrow {
-      position: absolute;
-      left: 24px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 60px;
-      color: #fff;
-      font-size: 2rem;
-      width: 52px;
-      height: 52px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-      font-weight: 300;
-    }
-    .nav-arrow:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-    @media (max-width: 540px) {
-      .nav-arrow {
-        left: 8px;
-        width: 40px;
-        height: 40px;
-        font-size: 1.4rem;
-      }
-    }
-
-    .sticker-card {
-      position: relative;
-      max-width: 480px;
-      width: 100%;
-      background: #fcf7f0;
-      border-radius: 48px 16px 48px 16px;
-      padding: 36px 28px 28px;
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
-      border: 2px solid rgba(255, 255, 255, 0.25);
-      overflow: hidden;
-      transition: transform 0.3s ease;
-    }
-    .sticker-card:hover {
-      transform: scale(1.01);
-    }
-    .paper-grain {
-      position: absolute;
-      inset: 0;
-      opacity: 0.06;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      pointer-events: none;
-    }
-
-    .sticker-deco {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .deco {
-      position: absolute;
-      font-size: 2.4rem;
-      opacity: 0.15;
-      animation: floatDeco 14s ease-in-out infinite alternate;
-    }
-    .d1 { top: 8%; left: 6%; animation-delay: 0s; }
-    .d2 { top: 12%; right: 10%; animation-delay: 2s; }
-    .d3 { bottom: 18%; left: 8%; animation-delay: 4s; }
-    .d4 { bottom: 12%; right: 6%; animation-delay: 1s; }
-    .d5 { top: 40%; left: 2%; animation-delay: 3s; }
-    .d6 { top: 50%; right: 2%; animation-delay: 5s; }
-    .d7 { bottom: 30%; left: 20%; animation-delay: 2.5s; }
-    @keyframes floatDeco {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      100% { transform: translate(12px, -18px) rotate(12deg); }
-    }
-
-    .cutout-heading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      margin: 8px 0 20px;
-      font-family: 'Dancing Script', cursive;
-      font-weight: 700;
-      color: #2e2a4a;
-    }
-    .cutout-row {
-      font-size: 2.6rem;
-      line-height: 1.2;
-      text-align: center;
-      letter-spacing: 1px;
-      word-break: break-word;
-    }
-    .cutout-row:first-child {
-      font-size: 3rem;
-    }
-    .cutout-row:last-child {
-      font-size: 2.2rem;
-      color: #6c63ff;
-    }
-
-    .sticker-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 2px dashed rgba(108, 99, 255, 0.15);
-    }
-
-    /* ---------- TOAST ---------- */
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(12px);
-      color: #fff;
-      padding: 12px 28px;
-      border-radius: 60px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      z-index: 9999;
-      opacity: 0;
-      transition: all 0.4s ease;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    .toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ---------- SPARKLE POP ---------- */
-    .sparkle {
-      position: fixed;
-      font-size: 2rem;
-      pointer-events: none;
-      z-index: 999;
-      animation: sparklePop 1s ease-out forwards;
-    }
-    @keyframes sparklePop {
-      0% { transform: scale(0.4) rotate(0deg); opacity: 1; }
-      100% { transform: scale(1.6) rotate(40deg); opacity: 0; }
-    }
-
-    /* ---------- RESPONSIVE ---------- */
-    @media (max-width: 480px) {
-      .card-face {
-        padding: 28px 16px 20px;
-      }
-      .title {
-        font-size: 2.2rem;
-      }
-      .line {
-        font-size: 0.95rem;
-      }
-      .line.signature {
-        font-size: 1.4rem;
-      }
-      .input-pair {
-        flex-direction: column;
-        gap: 10px;
-      }
-      .action-buttons .btn-ghost {
-        font-size: 0.8rem;
-        padding: 6px 14px;
-      }
-      .sticker-card {
-        padding: 24px 16px 20px;
-      }
-      .cutout-row {
-        font-size: 2rem !important;
-      }
-      .cutout-row:last-child {
-        font-size: 1.6rem !important;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="friendship.css" />
 </head>
+
 <body>
 
-  <!-- LAYERS -->
+  <!-- Layer 1: animated pastel gradient, always present -->
   <div class="gradient-bg" id="gradientBg"></div>
-  <div class="glow-layer" aria-hidden="true">
+
+  <!-- Layer 1b: soft blurred colour blobs so the backdrop doesn't feel empty -->
+  <div class="glow-layer" id="glowLayer" aria-hidden="true">
     <span class="glow-blob blob-1"></span>
     <span class="glow-blob blob-2"></span>
     <span class="glow-blob blob-3"></span>
     <span class="glow-blob blob-4"></span>
   </div>
+
+  <!-- Layer 2: starry night sky, fades in after the surprise is revealed -->
   <div class="stars-layer" id="starsLayer"></div>
+
+  <!-- Layer 3: ambient floating hearts / stars / smileys, sits above the background -->
   <div class="floating-layer" id="floatingLayer"></div>
+
+  <!-- Layer 4: full-screen canvas used only for the confetti burst -->
   <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 
-  <!-- MAIN CARD -->
   <main class="stage">
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
-        <!-- FRONT -->
+
+        <!-- FRONT FACE: greeting + name inputs -->
         <section class="card-face card-front" id="cardFront">
           <p class="eyebrow">✨ A little something for a special someone</p>
           <h1 class="title">Happy Friendship&nbsp;Day <span class="title-heart">💙</span></h1>
@@ -731,42 +52,82 @@
             <div class="input-pair">
               <div class="input-group">
                 <label for="yourName">Your name</label>
-                <input type="text" id="yourName" placeholder="Enter name" maxlength="30" autocomplete="off" />
+                <input type="text" id="yourName" name="yourName" placeholder="Enter name " maxlength="30"
+                  autocomplete="off" />
               </div>
+
+
+
               <div class="input-group">
                 <label for="friendName">Friend's name</label>
-                <input type="text" id="friendName" placeholder="Enter name" maxlength="30" autocomplete="off" />
+                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30"
+                  autocomplete="off" />
               </div>
             </div>
-            <p class="form-error" id="formError" role="alert">Please fill in both names ✨</p>
+
+            <p class="form-error" id="formError" role="alert">Please fill in both names </p>
+
             <button type="submit" class="btn btn-primary" id="generateBtn">
               <span>Generate Surprise</span> <span class="btn-sparkle">✨</span>
             </button>
           </form>
         </section>
 
-        <!-- BACK -->
+        <!-- BACK FACE: revealed message + actions -->
         <section class="card-face card-back" id="cardBack">
           <div class="message-content" id="messageContent"></div>
           <p class="quote" id="quote"></p>
 
           <div class="action-buttons">
-            <button class="btn btn-ghost" id="copyBtn" type="button">📋 Copy</button>
-            <button class="btn btn-ghost" id="downloadBtn" type="button">⬇️ Download</button>
+            <button class="btn btn-ghost" id="copyBtn" type="button">📋 Copy message</button>
+            <button class="btn btn-ghost" id="downloadBtn" type="button">⬇️ Download card</button>
             <button class="btn btn-ghost" id="shareBtn" type="button">🔗 Share</button>
-            <button class="btn btn-reset" id="resetBtn" type="button">↺ New</button>
+            <button class="btn btn-reset" id="resetBtn" type="button">↺ Make another</button>
           </div>
 
           <button class="next-slide-btn" id="nextSlideBtn" type="button">
             One more surprise <span class="chevron">›</span>
           </button>
         </section>
+
       </div>
     </div>
   </main>
 
-  <!-- STICKER SLIDE -->
+  <!-- SLIDE 3: scrapbook-style sticker card, slides in after the message -->
   <div class="sticker-stage" id="stickerStage">
-    <button class="nav-arrow" id="stickerBackBtn" type="button" aria-label="Back">‹</button>
+    <button class="nav-arrow nav-back" id="stickerBackBtn" type="button" aria-label="Back to your message">‹</button>
+
     <div class="sticker-card" id="stickerCard">
-      <div class="paper-grain" aria-hidden
+      <div class="paper-grain" aria-hidden="true"></div>
+
+      <div class="sticker-deco" aria-hidden="true">
+        <span class="deco d1">❤️</span>
+        <span class="deco d2">⭐</span>
+        <span class="deco d3">⭐</span>
+        <span class="deco d4">💛</span>
+        <span class="deco d5">✨</span>
+        <span class="deco d6">🩷</span>
+        <span class="deco d7">💫</span>
+      </div>
+
+      <div class="cutout-heading" id="cutoutHeading">
+        <div class="cutout-row" id="cutoutRow1"></div>
+        <div class="cutout-row" id="cutoutRow2"></div>
+      </div>
+
+      <div class="sticker-actions">
+        <button class="btn btn-ghost" id="stickerDownloadBtn" type="button">⬇️ Download</button>
+        <button class="btn btn-ghost" id="stickerShareBtn" type="button">🔗 Share</button>
+        <button class="btn btn-reset" id="stickerResetBtn" type="button">↺ Make another</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Small floating toast for copy / share feedback -->
+  <div class="toast" id="toast"></div>
+
+  <script src="friendship.js"></script>
+</body>
+
+</html>
