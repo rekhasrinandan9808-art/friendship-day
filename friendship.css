@@ -12,7 +12,7 @@
   --glass-border: rgba(255, 255, 255, 0.85);
 
   --ink: #2e2a4a;
-  --ink-soft: #6b6490;
+  --ink-soft: #4a4468;
 
   --accent-1: #6c63ff;
   --accent-2: #ff8fb1;
@@ -47,6 +47,33 @@ body {
   color: var(--ink);
   overflow-x: hidden;
   min-height: 100vh;
+}
+
+/* --- Sound Toggle Button --- */
+.sound-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.sound-toggle:hover {
+  transform: scale(1.08);
+  background: #ffffff;
 }
 
 /* --- Background Layers --- */
@@ -217,6 +244,15 @@ body.night .glow-layer {
   padding: 36px 28px;
   overflow-y: auto;
   max-height: 85vh;
+}
+
+.card-face::-webkit-scrollbar {
+  width: 6px;
+}
+
+.card-face::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.25);
+  border-radius: 10px;
 }
 
 .card-front {
