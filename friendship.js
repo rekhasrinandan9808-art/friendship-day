@@ -27,6 +27,7 @@ const stickerDownloadBtn = document.getElementById("stickerDownloadBtn");
 const stickerShareBtn = document.getElementById("stickerShareBtn");
 const cutoutRow1 = document.getElementById("cutoutRow1");
 const cutoutRow2 = document.getElementById("cutoutRow2");
+const soundToggle = document.getElementById("soundToggle");
 
 const ctx = confettiCanvas.getContext("2d");
 
@@ -34,8 +35,49 @@ const state = {
   yourName: "",
   friendName: "",
   isNight: false,
-  memoryTimer: null
+  memoryTimer: null,
+  soundEnabled: true
 };
+
+// --- Web Audio Synthesizer (No External Files Required) ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(freq, type, duration, gainValue = 0.1) {
+  if (!state.soundEnabled) return;
+  try {
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {
+    // Audio context fallback
+  }
+}
+
+function playFlipSound() {
+  playTone(440, "sine", 0.3, 0.08);
+  setTimeout(() => playTone(880, "sine", 0.4, 0.05), 100);
+}
+
+function playPopSound() {
+  playTone(523.25, "triangle", 0.15, 0.12);
+  setTimeout(() => playTone(659.25, "triangle", 0.2, 0.1), 80);
+}
+
+function toggleSound() {
+  state.soundEnabled = !state.soundEnabled;
+  soundToggle.textContent = state.soundEnabled ? "🔊" : "🔇";
+  showToast(state.soundEnabled ? "Sound enabled 🔊" : "Sound muted 🔇");
+}
 
 // --- Helper Utilities ---
 function roundRect(c, x, y, w, h, r) {
@@ -168,6 +210,7 @@ function revealSurprise(you, friend, updateUrl = true) {
 
   renderMessage(friend, you);
   card.classList.add("flipped");
+  playFlipSound();
 
   setTimeout(() => {
     burstConfetti(window.innerWidth / 2, window.innerHeight / 2.4);
@@ -194,6 +237,7 @@ function handleGenerate(e) {
 function resetCard() {
   hideStickerSlide();
   card.classList.remove("flipped");
+  playFlipSound();
   stopNightMode();
   
   const url = new URL(window.location.href);
@@ -218,6 +262,7 @@ function resizeConfettiCanvas() {
 }
 
 function burstConfetti(originX, originY) {
+  playPopSound();
   const colors = ["#6C63FF", "#FF8FB1", "#FFC978", "#9AD1FF", "#C9B8FF", "#ffffff"];
   const particles = [];
   const count = 90;
@@ -531,6 +576,7 @@ function initStickerSlide() {
 
 function showStickerSlide() {
   stickerStage.classList.add("active");
+  playFlipSound();
 }
 
 function hideStickerSlide() {
@@ -627,7 +673,7 @@ async function downloadStickerCard() {
   }, "image/png");
 }
 
-// --- Application Initialization & Deep Linking ---
+// --- Application Initialization & Deep Link Resolution ---
 function initApp() {
   resizeConfettiCanvas();
   window.addEventListener("resize", resizeConfettiCanvas);
@@ -636,12 +682,13 @@ function initApp() {
   initStars();
   initStickerSlide();
 
-  // Bind Listeners
+  // Event Listeners
   form.addEventListener("submit", handleGenerate);
   resetBtn.addEventListener("click", resetCard);
   copyBtn.addEventListener("click", copyMessage);
   downloadBtn.addEventListener("click", downloadCard);
   shareBtn.addEventListener("click", shareCard);
+  soundToggle.addEventListener("click", toggleSound);
 
   nextSlideBtn.addEventListener("click", showStickerSlide);
   stickerBackBtn.addEventListener("click", hideStickerSlide);
@@ -649,16 +696,19 @@ function initApp() {
   stickerDownloadBtn.addEventListener("click", downloadStickerCard);
   stickerShareBtn.addEventListener("click", shareCard);
 
-  // Deep Link Handling (Resolves Perspective Logic Issue)
-  const urlParams = new URLSearchParams(window.location.search);
-  const fromParam = urlParams.get("from");
-  const toParam = urlParams.get("to");
+  // Deep Link Handling (Auto-Reveals Card if Shared via URL parameters)
+  const params = new URLSearchParams(window.location.search);
+  const fromName = params.get("from");
+  const toName = params.get("to");
 
-  if (fromParam && toParam) {
-    yourNameInput.value = fromParam;
-    friendNameInput.value = toParam;
-    revealSurprise(fromParam, toParam, false);
+  if (fromName && toName) {
+    yourNameInput.value = fromName;
+    friendNameInput.value = toName;
+    revealSurprise(fromName, toName, false);
+  } else {
+    yourNameInput.focus();
   }
 }
 
+// Kick off app lifecycle
 document.addEventListener("DOMContentLoaded", initApp);
