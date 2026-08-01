@@ -42,7 +42,7 @@
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
 
-        <!-- FRONT FACE: greeting + friend's name only -->
+        <!-- FRONT FACE: greeting + name inputs -->
         <section class="card-face card-front" id="cardFront">
           <p class="eyebrow">✨ A little something for a special someone</p>
           <h1 class="title">Happy Friendship&nbsp;Day <span class="title-heart">💙</span></h1>
@@ -50,15 +50,22 @@
 
           <form class="form" id="surpriseForm" novalidate>
             <div class="input-pair">
-              <!-- REMOVED "Your name" field - only Friend's name remains -->
-              <div class="input-group" style="width:100%;">
+              <div class="input-group">
+                <label for="yourName">Your name</label>
+                <input type="text" id="yourName" name="yourName" placeholder="Enter name " maxlength="30"
+                  autocomplete="off" />
+              </div>
+
+
+
+              <div class="input-group">
                 <label for="friendName">Friend's name</label>
-                <input type="text" id="friendName" name="friendName" placeholder="Enter your friend's name" maxlength="30"
-                  autocomplete="off" style="width:100%;" />
+                <input type="text" id="friendName" name="friendName" placeholder="Enter name" maxlength="30"
+                  autocomplete="off" />
               </div>
             </div>
 
-            <p class="form-error" id="formError" role="alert">Please enter your friend's name ✨</p>
+            <p class="form-error" id="formError" role="alert">Please fill in both names </p>
 
             <button type="submit" class="btn btn-primary" id="generateBtn">
               <span>Generate Surprise</span> <span class="btn-sparkle">✨</span>
