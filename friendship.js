@@ -165,7 +165,7 @@ function stopNightMode() {
   starsLayer.querySelectorAll(".memory").forEach((m) => m.remove());
 }
 
-// --- FEATURE 1: Photo Polaroid Handler ---
+// --- Photo Polaroid Handler ---
 document.getElementById("photoUpload").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -179,7 +179,7 @@ document.getElementById("photoUpload").addEventListener("change", (e) => {
   }
 });
 
-// --- FEATURE 3: Interactive Scratch-Card Reveal Engine ---
+// --- Interactive Scratch-Card Reveal Engine ---
 function initScratchCard() {
   const canvas = document.getElementById("scratchCanvas");
   if (!canvas) return;
@@ -220,41 +220,7 @@ function initScratchCard() {
   ["mouseup", "touchend"].forEach(evt => canvas.addEventListener(evt, () => { isScratching = false; }));
 }
 
-// --- FEATURE 4: Secret Quiz Lock Logic ---
-function appendQuizToUrl(url) {
-  const q = document.getElementById("quizQuestion").value.trim();
-  const a = document.getElementById("quizAnswer").value.trim().toLowerCase();
-  if (q && a) {
-    url.searchParams.set("q", btoa(q));
-    url.searchParams.set("a", btoa(a));
-  }
-}
-
-function checkUrlQuiz() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.has("q") && params.has("a")) {
-    try {
-      const question = atob(params.get("q"));
-      const correctAnswer = atob(params.get("a"));
-
-      const overlay = document.getElementById("quizOverlay");
-      document.getElementById("displayQuizQuestion").textContent = question;
-      overlay.hidden = false;
-
-      document.getElementById("submitQuizBtn").onclick = () => {
-        const userAns = document.getElementById("userQuizInput").value.trim().toLowerCase();
-        if (userAns === correctAnswer) {
-          overlay.hidden = true;
-          showToast("Unlocked successfully! 🎉");
-        } else {
-          document.getElementById("quizError").classList.add("visible");
-        }
-      };
-    } catch(e) {}
-  }
-}
-
-// --- FEATURE 5: Friendship Coupon Handler ---
+// --- Friendship Coupon Handler ---
 function claimCoupon(el) {
   if (!el.classList.contains("claimed")) {
     el.classList.add("claimed");
@@ -309,7 +275,6 @@ function revealSurprise(you, friend, updateUrl = true) {
     const url = new URL(window.location.href);
     url.searchParams.set("from", you);
     url.searchParams.set("to", friend);
-    appendQuizToUrl(url);
     window.history.pushState({}, "", url);
   }
 
@@ -349,8 +314,6 @@ function resetCard() {
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
-  url.searchParams.delete("q");
-  url.searchParams.delete("a");
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -450,7 +413,6 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
-  appendQuizToUrl(url);
   return url.toString();
 }
 
@@ -769,8 +731,6 @@ function initApp() {
     friendNameInput.value = toParam;
     revealSurprise(fromParam, toParam, false);
   }
-
-  checkUrlQuiz();
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
