@@ -1,44 +1,61 @@
 /* =========================================================
-   FRIENDSHIP DAY — script.js
-   No frameworks, no build step — just DOM + Canvas + a few
-   small Web APIs (Clipboard, Web Share, Web Animations).
+   FRIENDSHIP DAY — friendship.js
    ========================================================= */
 
-// ---------- Grab elements we'll reuse ----------
-const gradientBg      = document.getElementById("gradientBg");
-const starsLayer      = document.getElementById("starsLayer");
-const floatingLayer   = document.getElementById("floatingLayer");
-const confettiCanvas  = document.getElementById("confettiCanvas");
-const card            = document.getElementById("card");
-const cardContainer   = document.getElementById("cardContainer");
-const form            = document.getElementById("surpriseForm");
-const yourNameInput   = document.getElementById("yourName");
+const gradientBg = document.getElementById("gradientBg");
+const starsLayer = document.getElementById("starsLayer");
+const floatingLayer = document.getElementById("floatingLayer");
+const confettiCanvas = document.getElementById("confettiCanvas");
+const card = document.getElementById("card");
+const cardContainer = document.getElementById("cardContainer");
+const form = document.getElementById("surpriseForm");
+const yourNameInput = document.getElementById("yourName");
 const friendNameInput = document.getElementById("friendName");
-const formError       = document.getElementById("formError");
-const messageContent  = document.getElementById("messageContent");
-const quoteEl         = document.getElementById("quote");
-const copyBtn         = document.getElementById("copyBtn");
-const downloadBtn     = document.getElementById("downloadBtn");
-const shareBtn        = document.getElementById("shareBtn");
-const resetBtn        = document.getElementById("resetBtn");
-const toastEl         = document.getElementById("toast");
-const nextSlideBtn    = document.getElementById("nextSlideBtn");
-const stickerStage    = document.getElementById("stickerStage");
-const stickerBackBtn  = document.getElementById("stickerBackBtn");
+const formError = document.getElementById("formError");
+const messageContent = document.getElementById("messageContent");
+const quoteEl = document.getElementById("quote");
+const copyBtn = document.getElementById("copyBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const shareBtn = document.getElementById("shareBtn");
+const resetBtn = document.getElementById("resetBtn");
+const toastEl = document.getElementById("toast");
+const nextSlideBtn = document.getElementById("nextSlideBtn");
+const stickerStage = document.getElementById("stickerStage");
+const stickerBackBtn = document.getElementById("stickerBackBtn");
 const stickerResetBtn = document.getElementById("stickerResetBtn");
 const stickerDownloadBtn = document.getElementById("stickerDownloadBtn");
 const stickerShareBtn = document.getElementById("stickerShareBtn");
-const cutoutRow1      = document.getElementById("cutoutRow1");
-const cutoutRow2      = document.getElementById("cutoutRow2");
+const cutoutRow1 = document.getElementById("cutoutRow1");
+const cutoutRow2 = document.getElementById("cutoutRow2");
 
 const ctx = confettiCanvas.getContext("2d");
 
-// Small bit of shared state so download/share/copy always match what's on screen
-const state = { yourName: "", friendName: "", isNight: false, memoryTimer: null };
+const state = {
+  yourName: "",
+  friendName: "",
+  isNight: false,
+  memoryTimer: null
+};
 
-/* =========================================================
-   1. AMBIENT FLOATING ICONS (hearts / stars / smileys)
-   ========================================================= */
+// --- Helper Utilities ---
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("visible");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toastEl.classList.remove("visible"), 2200);
+}
+
+// --- Background Visual Effects ---
 function initFloatingAmbient() {
   const icons = ["💙", "💕", "✨", "⭐", "🙂", "💫", "🎀", "🌸", "🦋", "💌", "🧸", "🌟"];
   const count = 22;
@@ -53,15 +70,12 @@ function initFloatingAmbient() {
     span.style.left = Math.random() * 100 + "vw";
     span.style.fontSize = size + "px";
     span.style.animationDuration = duration + "s";
-    span.style.animationDelay = -delay + "s"; // negative delay = already mid-flight on load
+    span.style.animationDelay = -delay + "s";
     span.style.setProperty("--drift", drift);
     floatingLayer.appendChild(span);
   }
 }
 
-/* =========================================================
-   2. STARRY SKY (built once, faded in after reveal)
-   ========================================================= */
 function initStars() {
   const count = 90;
   for (let i = 0; i < count; i++) {
@@ -78,7 +92,6 @@ function initStars() {
   }
 }
 
-// Small drifting "memory" bubbles once night mode kicks in
 function spawnMemory() {
   const icons = ["💙", "✨", "⭐"];
   const el = document.createElement("span");
@@ -110,16 +123,14 @@ function stopNightMode() {
   starsLayer.querySelectorAll(".memory").forEach((m) => m.remove());
 }
 
-/* =========================================================
-   3. FORM VALIDATION + FLIP REVEAL
-   ========================================================= */
+// --- Card Rendering & Logic ---
 function buildMessageLines(friend, you) {
   return [
     `Dear ${friend},`,
     "Thank you for being an amazing friend.",
     "Wishing you endless happiness and unforgettable memories.",
     "Happy Friendship Day! 💙",
-    `— ${you}`,
+    `— ${you}`
   ];
 }
 
@@ -128,7 +139,7 @@ function buildQuote(friend) {
 }
 
 function renderMessage(friend, you) {
-  messageContent.innerHTML = ""; // safe: only our own template strings + escaped names go in via textContent below
+  messageContent.innerHTML = "";
   const lines = buildMessageLines(friend, you);
 
   lines.forEach((text, i) => {
@@ -141,7 +152,28 @@ function renderMessage(friend, you) {
 
   quoteEl.textContent = buildQuote(friend);
   quoteEl.classList.remove("visible");
-  setTimeout(() => quoteEl.classList.add("visible"), 0.25 + lines.length * 280 + 300);
+  setTimeout(() => quoteEl.classList.add("visible"), (0.25 + lines.length * 0.28 + 0.3) * 1000);
+}
+
+function revealSurprise(you, friend, updateUrl = true) {
+  state.yourName = you;
+  state.friendName = friend;
+
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("from", you);
+    url.searchParams.set("to", friend);
+    window.history.pushState({}, "", url);
+  }
+
+  renderMessage(friend, you);
+  card.classList.add("flipped");
+
+  setTimeout(() => {
+    burstConfetti(window.innerWidth / 2, window.innerHeight / 2.4);
+    burstSparkles();
+    startNightMode();
+  }, 550);
 }
 
 function handleGenerate(e) {
@@ -156,25 +188,19 @@ function handleGenerate(e) {
     return;
   }
   formError.classList.remove("visible");
-
-  state.yourName = you;
-  state.friendName = friend;
-
-  renderMessage(friend, you);
-  card.classList.add("flipped");
-
-  // Once the flip has visually happened, layer on the celebration
-  setTimeout(() => {
-    burstConfetti(window.innerWidth / 2, window.innerHeight / 2.4);
-    burstSparkles();
-    startNightMode();
-  }, 550);
+  revealSurprise(you, friend, true);
 }
 
 function resetCard() {
   hideStickerSlide();
   card.classList.remove("flipped");
   stopNightMode();
+  
+  const url = new URL(window.location.href);
+  url.searchParams.delete("from");
+  url.searchParams.delete("to");
+  window.history.pushState({}, "", url);
+
   setTimeout(() => {
     form.reset();
     formError.classList.remove("visible");
@@ -185,15 +211,11 @@ function resetCard() {
   }, 500);
 }
 
-/* =========================================================
-   4. CONFETTI BURST (canvas-based particle system)
-   ========================================================= */
+// --- Confetti Canvas System ---
 function resizeConfettiCanvas() {
   confettiCanvas.width = window.innerWidth;
   confettiCanvas.height = window.innerHeight;
 }
-resizeConfettiCanvas();
-window.addEventListener("resize", resizeConfettiCanvas);
 
 function burstConfetti(originX, originY) {
   const colors = ["#6C63FF", "#FF8FB1", "#FFC978", "#9AD1FF", "#C9B8FF", "#ffffff"];
@@ -212,7 +234,7 @@ function burstConfetti(originX, originY) {
       color: colors[Math.floor(Math.random() * colors.length)],
       rotation: Math.random() * Math.PI,
       vr: (Math.random() - 0.5) * 0.3,
-      life: 1,
+      life: 1
     });
   }
 
@@ -223,12 +245,11 @@ function burstConfetti(originX, originY) {
     particles.forEach((p) => {
       if (p.life <= 0) return;
       alive = true;
-      p.vy += 0.12; // gravity
+      p.vy += 0.12;
       p.x += p.vx;
       p.y += p.vy;
       p.rotation += p.vr;
       p.life -= 0.012;
-
       ctx.save();
       ctx.globalAlpha = Math.max(p.life, 0);
       ctx.translate(p.x, p.y);
@@ -253,7 +274,7 @@ function burstSparkles() {
     { x: rect.left + 10, y: rect.top + 10 },
     { x: rect.right - 10, y: rect.top + 20 },
     { x: rect.left + 20, y: rect.bottom - 20 },
-    { x: rect.right - 20, y: rect.bottom - 10 },
+    { x: rect.right - 20, y: rect.bottom - 10 }
   ];
   spots.forEach((spot, i) => {
     setTimeout(() => {
@@ -268,18 +289,16 @@ function burstSparkles() {
   });
 }
 
-/* =========================================================
-   5. COPY / SHARE
-   ========================================================= */
-function plainMessage() {
-  return buildMessageLines(state.friendName, state.yourName).join("\n");
+// --- Sharing & Clipboard Utilities ---
+function getShareableUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("from", state.yourName);
+  url.searchParams.set("to", state.friendName);
+  return url.toString();
 }
 
-function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add("visible");
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => toastEl.classList.remove("visible"), 2200);
+function plainMessage() {
+  return buildMessageLines(state.friendName, state.yourName).join("\n");
 }
 
 async function copyMessage() {
@@ -288,7 +307,6 @@ async function copyMessage() {
     await navigator.clipboard.writeText(text);
     showToast("Message copied 📋");
   } catch (err) {
-    // Fallback for older browsers / no clipboard permission
     const ta = document.createElement("textarea");
     ta.value = text;
     ta.style.position = "fixed";
@@ -302,26 +320,30 @@ async function copyMessage() {
 }
 
 async function shareCard() {
-  const text = plainMessage();
+  const shareUrl = getShareableUrl();
+  const shareData = {
+    title: "Happy Friendship Day 💙",
+    text: `${state.yourName} sent you a Friendship Day card!`,
+    url: shareUrl
+  };
+
   if (navigator.share) {
     try {
-      await navigator.share({ title: "Happy Friendship Day 💙", text });
+      await navigator.share(shareData);
     } catch (err) {
-      // user cancelled the share sheet — no action needed
+      // User cancelled share
     }
   } else {
     try {
-      await navigator.clipboard.writeText(text);
-      showToast("Sharing isn't supported here — message copied instead 📋");
+      await navigator.clipboard.writeText(shareUrl);
+      showToast("Surprise link copied to clipboard! 🔗");
     } catch {
-      showToast("Sharing isn't supported on this browser");
+      showToast("Unable to copy share link");
     }
   }
 }
 
-/* =========================================================
-   6. DOWNLOAD CARD AS PNG (drawn fresh on an offscreen canvas)
-   ========================================================= */
+// --- Offscreen Canvas Image Exporter ---
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
   let line = "";
@@ -341,13 +363,12 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 async function downloadCard() {
-  // make sure the custom fonts are actually ready before we measure/draw text
   await Promise.all([
     document.fonts.load('700 60px "Dancing Script"'),
     document.fonts.load('600 30px "Dancing Script"'),
     document.fonts.load('600 22px "Poppins"'),
     document.fonts.load('500 24px "Poppins"'),
-    document.fonts.load('400 22px "Poppins"'),
+    document.fonts.load('400 22px "Poppins"')
   ]);
 
   const W = 900, H = 1150;
@@ -356,7 +377,6 @@ async function downloadCard() {
   off.height = H;
   const c = off.getContext("2d");
 
-  // Background — matches whichever mode the card is currently in
   let bgGrad;
   if (state.isNight) {
     bgGrad = c.createLinearGradient(0, 0, 0, H);
@@ -364,7 +384,7 @@ async function downloadCard() {
     bgGrad.addColorStop(1, "#0b1030");
     c.fillStyle = bgGrad;
     c.fillRect(0, 0, W, H);
-    // simple stars
+    
     c.fillStyle = "#fdf6e3";
     for (let i = 0; i < 140; i++) {
       const r = Math.random() * 1.6 + 0.4;
@@ -383,10 +403,10 @@ async function downloadCard() {
     c.fillRect(0, 0, W, H);
   }
 
-  // Glass card panel
   const pad = 60;
   const panelX = pad, panelY = 90, panelW = W - pad * 2, panelH = H - 180;
   const radius = 32;
+  
   c.save();
   c.shadowColor = "rgba(46,42,74,0.25)";
   c.shadowBlur = 40;
@@ -404,7 +424,6 @@ async function downloadCard() {
   const textColor = state.isNight ? "#f3f0ff" : "#2e2a4a";
   const accent = "#6c63ff";
 
-  // Heading
   c.textAlign = "center";
   c.fillStyle = "#e0567a";
   c.font = "600 22px Poppins";
@@ -412,15 +431,13 @@ async function downloadCard() {
 
   c.fillStyle = textColor;
   c.font = "700 56px 'Dancing Script'";
-  c.fillText(`Happy Friendship Day 💙`, W / 2, panelY + 150);
+  c.fillText("Happy Friendship Day 💙", W / 2, panelY + 150);
 
   c.font = "400 22px Poppins";
   c.fillStyle = state.isNight ? "#cfc9f5" : "#6b6490";
   c.fillText("Some friendships make life more beautiful.", W / 2, panelY + 195);
 
-  // Message body
   c.textAlign = "left";
-  c.font = "400 26px Poppins";
   c.fillStyle = textColor;
   const lines = buildMessageLines(state.friendName, state.yourName);
   let cursorY = panelY + 280;
@@ -441,13 +458,11 @@ async function downloadCard() {
     cursorY += wrapText(c, line, bodyX, cursorY, bodyW, 38) + 14;
   });
 
-  // Quote
   c.font = "italic 500 24px 'Dancing Script'";
   c.fillStyle = accent;
   cursorY += 20;
   cursorY += wrapText(c, buildQuote(state.friendName), bodyX, cursorY, bodyW, 34);
 
-  // Footer mark
   c.textAlign = "center";
   c.font = "400 16px Poppins";
   c.fillStyle = state.isNight ? "rgba(243,240,255,0.6)" : "rgba(107,100,144,0.7)";
@@ -466,22 +481,7 @@ async function downloadCard() {
   }, "image/png");
 }
 
-function roundRect(c, x, y, w, h, r) {
-  c.beginPath();
-  c.moveTo(x + r, y);
-  c.arcTo(x + w, y, x + w, y + h, r);
-  c.arcTo(x + w, y + h, x, y + h, r);
-  c.arcTo(x, y + h, x, y, r);
-  c.arcTo(x, y, x + w, y, r);
-  c.closePath();
-}
-
-/* =========================================================
-   7. SLIDE 3 — SCRAPBOOK STICKER CARD
-   ========================================================= */
-
-// A handful of paper-cutout "swatches" (bg + text colour) and font treatments,
-// mixed together so each letter looks like it was snipped from a different magazine.
+// --- Scrapbook Sticker Card Module ---
 const CUTOUT_SWATCHES = [
   { bg: "#f4e9da", fg: "#1f1b1b" },
   { bg: "#e9553b", fg: "#ffffff" },
@@ -490,13 +490,14 @@ const CUTOUT_SWATCHES = [
   { bg: "#e8b93e", fg: "#1f1b1b" },
   { bg: "#f2a6c0", fg: "#1f1b1b" },
   { bg: "#8fae8b", fg: "#ffffff" },
-  { bg: "#ffffff", fg: "#1f1b1b" },
+  { bg: "#ffffff", fg: "#1f1b1b" }
 ];
+
 const CUTOUT_FONTS = [
   { fontFamily: "'Poppins', sans-serif", fontWeight: 800 },
   { fontFamily: "Georgia, serif", fontWeight: 700, fontStyle: "italic" },
   { fontFamily: "'Courier New', monospace", fontWeight: 700 },
-  { fontFamily: "'Dancing Script', cursive", fontWeight: 700 },
+  { fontFamily: "'Dancing Script', cursive", fontWeight: 700 }
 ];
 
 function buildCutoutRow(container, word) {
@@ -539,7 +540,7 @@ function hideStickerSlide() {
 async function downloadStickerCard() {
   await Promise.all([
     document.fonts.load('800 40px "Poppins"'),
-    document.fonts.load('700 40px "Dancing Script"'),
+    document.fonts.load('700 40px "Dancing Script"')
   ]);
 
   const W = 1000, H = 640;
@@ -548,13 +549,13 @@ async function downloadStickerCard() {
   off.height = H;
   const c = off.getContext("2d");
 
-  // paper base
   const grad = c.createLinearGradient(0, 0, W, H);
   grad.addColorStop(0, "#f7f3ec");
   grad.addColorStop(0.55, "#efe9df");
   grad.addColorStop(1, "#f7f3ec");
   c.fillStyle = grad;
   c.fillRect(0, 0, W, H);
+  
   c.fillStyle = "rgba(0,0,0,0.04)";
   for (let i = 0; i < 40; i++) {
     c.beginPath();
@@ -562,17 +563,19 @@ async function downloadStickerCard() {
     c.fill();
   }
 
-  // decorative emoji
   c.textAlign = "center";
   c.font = "40px serif";
   const deco = [
-    ["❤️", W * 0.1, H * 0.15], ["⭐", W * 0.32, H * 0.1], ["⭐", W * 0.72, H * 0.12],
-    ["💛", W * 0.92, H * 0.2], ["✨", W * 0.1, H * 0.85], ["🩷", W * 0.9, H * 0.82],
+    ["❤️", W * 0.1, H * 0.15],
+    ["⭐", W * 0.32, H * 0.1],
+    ["⭐", W * 0.72, H * 0.12],
+    ["💛", W * 0.92, H * 0.2],
+    ["✨", W * 0.1, H * 0.85],
+    ["🩷", W * 0.9, H * 0.82]
   ];
   deco.forEach(([emoji, x, y]) => c.fillText(emoji, x, y));
 
   function drawCutoutWord(word, centerY, fontSize) {
-    // measure total width first so the word can be centred
     c.font = `800 ${fontSize}px Poppins`;
     const letters = word.split("");
     const gap = fontSize * 0.18;
@@ -585,63 +588,77 @@ async function downloadStickerCard() {
       if (ch !== " ") {
         const swatch = CUTOUT_SWATCHES[Math.floor(Math.random() * CUTOUT_SWATCHES.length)];
         const rot = (Math.random() * 12 - 6) * (Math.PI / 180);
+        
         c.save();
         c.translate(x + w / 2, centerY);
         c.rotate(rot);
-        c.fillStyle = "rgba(0,0,0,0.18)";
-        roundRect(c, -w / 2, -fontSize * 0.62, w, fontSize * 1.05, 4);
-        c.shadowColor = "rgba(0,0,0,0.25)";
-        c.shadowBlur = 6;
-        c.shadowOffsetY = 3;
+        
+        c.shadowColor = "rgba(0,0,0,0.22)";
+        c.shadowBlur = 8;
+        c.shadowOffsetY = 4;
         c.fillStyle = swatch.bg;
-        roundRect(c, -w / 2, -fontSize * 0.65, w, fontSize * 1.05, 4);
+        roundRect(c, -w / 2, -fontSize * 0.6, w, fontSize * 1.1, 6);
         c.fill();
+        
         c.shadowColor = "transparent";
         c.fillStyle = swatch.fg;
         c.textAlign = "center";
         c.textBaseline = "middle";
-        c.font = `800 ${fontSize}px Poppins`;
-        c.fillText(ch, 0, -fontSize * 0.08);
+        c.fillText(ch, 0, 0);
         c.restore();
       }
       x += w + gap;
     });
   }
 
-  drawCutoutWord("HAPPY", H * 0.4, 100);
-  drawCutoutWord("FRIENDSHIP DAY", H * 0.62, 62);
+  drawCutoutWord("HAPPY", H * 0.38, 70);
+  drawCutoutWord("FRIENDSHIP DAY", H * 0.58, 50);
 
   off.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "friendship-day-sticker-card.png";
+    a.download = "scrapbook-friendship-day.png";
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    showToast("Sticker card downloaded ⬇️");
+    showToast("Scrapbook card downloaded ⬇️");
   }, "image/png");
 }
 
-/* =========================================================
-   8. WIRE EVERYTHING UP
-   ========================================================= */
-form.addEventListener("submit", handleGenerate);
-resetBtn.addEventListener("click", resetCard);
-copyBtn.addEventListener("click", copyMessage);
-shareBtn.addEventListener("click", shareCard);
-downloadBtn.addEventListener("click", downloadCard);
+// --- Application Initialization & Deep Linking ---
+function initApp() {
+  resizeConfettiCanvas();
+  window.addEventListener("resize", resizeConfettiCanvas);
 
-nextSlideBtn.addEventListener("click", showStickerSlide);
-stickerBackBtn.addEventListener("click", hideStickerSlide);
-stickerResetBtn.addEventListener("click", () => {
-  hideStickerSlide();
-  resetCard();
-});
-stickerDownloadBtn.addEventListener("click", downloadStickerCard);
-stickerShareBtn.addEventListener("click", shareCard);
+  initFloatingAmbient();
+  initStars();
+  initStickerSlide();
 
-initFloatingAmbient();
-initStars();
-initStickerSlide();
+  // Bind Listeners
+  form.addEventListener("submit", handleGenerate);
+  resetBtn.addEventListener("click", resetCard);
+  copyBtn.addEventListener("click", copyMessage);
+  downloadBtn.addEventListener("click", downloadCard);
+  shareBtn.addEventListener("click", shareCard);
+
+  nextSlideBtn.addEventListener("click", showStickerSlide);
+  stickerBackBtn.addEventListener("click", hideStickerSlide);
+  stickerResetBtn.addEventListener("click", resetCard);
+  stickerDownloadBtn.addEventListener("click", downloadStickerCard);
+  stickerShareBtn.addEventListener("click", shareCard);
+
+  // Deep Link Handling (Resolves Perspective Logic Issue)
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromParam = urlParams.get("from");
+  const toParam = urlParams.get("to");
+
+  if (fromParam && toParam) {
+    yourNameInput.value = fromParam;
+    friendNameInput.value = toParam;
+    revealSurprise(fromParam, toParam, false);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
