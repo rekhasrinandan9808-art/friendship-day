@@ -1,3 +1,4 @@
+
 /* =========================================================
    FRIENDSHIP DAY — friendship.css
    ========================================================= */
@@ -385,7 +386,7 @@ body.night .glow-layer {
   80% { transform: translateX(4px); }
 }
 
-/* FEATURE 1: Polaroid Styling */
+/* Polaroid Styling */
 .polaroid-preview-box {
   display: flex;
   justify-content: center;
@@ -433,7 +434,7 @@ body.night .glow-layer {
   border: 1px dashed rgba(200, 180, 100, 0.4);
 }
 
-/* FEATURE 3: Scratch-Card Styling */
+/* Scratch-Card Styling */
 .scratch-wrapper {
   position: relative;
   width: 100%;
@@ -453,63 +454,7 @@ body.night .glow-layer {
   touch-action: none;
 }
 
-/* FEATURE 4: Secret Quiz Modal Styling */
-.quiz-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  background: rgba(11, 16, 48, 0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.quiz-modal {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 28px 24px;
-  max-width: 380px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-}
-
-.quiz-modal h3 {
-  margin: 0 0 10px;
-  font-size: 1.25rem;
-  color: var(--ink);
-}
-
-.quiz-q-text {
-  font-size: 0.95rem;
-  color: var(--ink-soft);
-  margin-bottom: 16px;
-  font-weight: 500;
-}
-
-.quiz-modal input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid rgba(108, 99, 255, 0.3);
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  outline: none;
-}
-
-.quiz-error {
-  color: #e0567a;
-  font-size: 0.82rem;
-  margin-top: 8px;
-  display: none;
-}
-
-.quiz-error.visible {
-  display: block;
-}
-
-/* FEATURE 5: Friendship Coupons Styling */
+/* Friendship Coupons Styling */
 .coupons-container {
   width: 100%;
   margin-top: 15px;
@@ -970,5 +915,4 @@ body.night .glow-layer {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-   }
-   
+}
