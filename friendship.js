@@ -200,44 +200,47 @@ function setPhotoSource(dataUrl) {
   if (cardBackPolaroid) cardBackPolaroid.hidden = false;
 }
 
-// Uploads Image directly using Imgur API for reliable global sharing
+// --- 1) Photo Upload Handler Replacement ---
+let uploadPromise = null; // tracks the in-flight Imgur upload
+
 async function uploadPhotoToImgur(base64Data) {
   try {
     showToast("Uploading photo for sharing... ⏳");
     const rawBase64 = base64Data.split(",")[1];
-    
     const response = await fetch("https://api.imgur.com/3/image", {
       method: "POST",
       headers: {
         Authorization: "Client-ID e0e5fb25d2542a1",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        image: rawBase64,
-        type: "base64"
-      })
+      body: JSON.stringify({ image: rawBase64, type: "base64" })
     });
-
     const result = await response.json();
     if (result && result.success && result.data.link) {
       publicImageUrl = result.data.link;
       showToast("Photo ready for sharing! ✨");
-    } else {
-      showToast("Photo saved locally!");
+      return true;
     }
+    publicImageUrl = null;
+    showToast("Photo upload failed – link will be text-only");
+    return false;
   } catch (err) {
     console.warn("Upload fallback error:", err);
+    publicImageUrl = null;
+    showToast("Photo upload failed – link will be text-only");
+    return false;
   }
 }
 
-document.getElementById("photoUpload").addEventListener("change", async (e) => {
+document.getElementById("photoUpload").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       const dataUrl = event.target.result;
       setPhotoSource(dataUrl);
-      await uploadPhotoToImgur(dataUrl);
+      publicImageUrl = null;
+      uploadPromise = uploadPhotoToImgur(dataUrl); // runs in background
     };
     reader.readAsDataURL(file);
   }
@@ -410,6 +413,7 @@ function resetCard() {
     document.getElementById("cardBackPolaroid").hidden = true;
     uploadedImageDataUrl = null;
     publicImageUrl = null;
+    uploadPromise = null;
     formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
@@ -500,8 +504,15 @@ async function copyMessage() {
   }
 }
 
+// --- 2) shareCard() Replacement ---
 async function shareCard() {
+  if (uploadedImageDataUrl && !publicImageUrl && uploadPromise) {
+    showToast("Finishing photo upload... ⏳");
+    await uploadPromise;
+  }
+
   const shareUrl = getShareableUrl();
+
   if (navigator.share) {
     try {
       await navigator.share({
