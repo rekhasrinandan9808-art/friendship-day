@@ -28,7 +28,7 @@ const soundToggle = document.getElementById("soundToggle");
 const ctx = confettiCanvas.getContext("2d");
 
 let uploadedImageDataUrl = null;
-let publicImageUrl = null; // Stores online link for cross-device sharing
+let publicImageUrl = null;
 
 const state = {
   yourName: "",
@@ -186,31 +186,47 @@ function setPhotoSource(dataUrl) {
   uploadedImageDataUrl = dataUrl;
   const frontImg = document.getElementById("polaroidImg");
   const backImg = document.getElementById("cardBackPolaroidImg");
-  if (frontImg) frontImg.src = dataUrl;
-  if (backImg) backImg.src = dataUrl;
+  if (frontImg) {
+    frontImg.crossOrigin = "anonymous";
+    frontImg.src = dataUrl;
+  }
+  if (backImg) {
+    backImg.crossOrigin = "anonymous";
+    backImg.src = dataUrl;
+  }
   
   document.getElementById("polaroidPreview").hidden = false;
   const cardBackPolaroid = document.getElementById("cardBackPolaroid");
   if (cardBackPolaroid) cardBackPolaroid.hidden = false;
 }
 
-// Uploads Image to free public host so anyone receiving the link can see it
-async function uploadToImgBB(base64Data) {
+// Uploads Image directly using Imgur API for reliable global sharing
+async function uploadPhotoToImgur(base64Data) {
   try {
-    const formData = new FormData();
-    formData.append("image", base64Data.split(",")[1]);
+    showToast("Uploading photo for sharing... ⏳");
+    const rawBase64 = base64Data.split(",")[1];
     
-    // Free public API key for sharing cards
-    const res = await fetch("https://api.imgbb.com/1/upload?key=6d257f2c1d0138f371a6b0c20f1883e6", {
+    const response = await fetch("https://api.imgur.com/3/image", {
       method: "POST",
-      body: formData
+      headers: {
+        Authorization: "Client-ID e0e5fb25d2542a1",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        image: rawBase64,
+        type: "base64"
+      })
     });
-    const result = await res.json();
-    if (result && result.data && result.data.url) {
-      publicImageUrl = result.data.url;
+
+    const result = await response.json();
+    if (result && result.success && result.data.link) {
+      publicImageUrl = result.data.link;
+      showToast("Photo ready for sharing! ✨");
+    } else {
+      showToast("Photo saved locally!");
     }
   } catch (err) {
-    console.warn("Could not generate public photo URL:", err);
+    console.warn("Upload fallback error:", err);
   }
 }
 
@@ -221,7 +237,7 @@ document.getElementById("photoUpload").addEventListener("change", async (e) => {
     reader.onload = async (event) => {
       const dataUrl = event.target.result;
       setPhotoSource(dataUrl);
-      await uploadToImgBB(dataUrl);
+      await uploadPhotoToImgur(dataUrl);
     };
     reader.readAsDataURL(file);
   }
@@ -556,6 +572,7 @@ async function downloadCard() {
         startBodyY = pY + pHeight + 80;
         resolve();
       };
+      img.onerror = () => resolve();
       img.src = uploadedImageDataUrl;
     });
   }
