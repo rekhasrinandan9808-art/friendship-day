@@ -28,7 +28,6 @@ const soundToggle = document.getElementById("soundToggle");
 const ctx = confettiCanvas.getContext("2d");
 
 let uploadedImageDataUrl = null;
-let publicImageUrl = null;
 
 const state = {
   yourName: "",
@@ -181,78 +180,63 @@ function stopNightMode() {
   starsLayer.classList.remove("visible");
 }
 
-// --- Photo Upload Handler ---
+// --- High-Performance Image Compression ---
+function compressImage(dataUrl, maxWidth = 320, quality = 0.5) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      resolve(canvas.toDataURL("image/webp", quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
 function setPhotoSource(dataUrl) {
   uploadedImageDataUrl = dataUrl;
   const frontImg = document.getElementById("polaroidImg");
   const backImg = document.getElementById("cardBackPolaroidImg");
-  if (frontImg) {
-    frontImg.crossOrigin = "anonymous";
-    frontImg.src = dataUrl;
-  }
-  if (backImg) {
-    backImg.crossOrigin = "anonymous";
-    backImg.src = dataUrl;
-  }
-  
+  if (frontImg) frontImg.src = dataUrl;
+  if (backImg) backImg.src = dataUrl;
+
   document.getElementById("polaroidPreview").hidden = false;
   const cardBackPolaroid = document.getElementById("cardBackPolaroid");
   if (cardBackPolaroid) cardBackPolaroid.hidden = false;
 }
 
-// --- 1) Photo Upload Handler Replacement ---
-let uploadPromise = null; // tracks the in-flight Imgur upload
-
-async function uploadPhotoToImgur(base64Data) {
-  try {
-    showToast("Uploading photo for sharing... ⏳");
-    const rawBase64 = base64Data.split(",")[1];
-    const response = await fetch("https://api.imgur.com/3/image", {
-      method: "POST",
-      headers: {
-        Authorization: "Client-ID e0e5fb25d2542a1",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ image: rawBase64, type: "base64" })
-    });
-    const result = await response.json();
-    if (result && result.success && result.data.link) {
-      publicImageUrl = result.data.link;
-      showToast("Photo ready for sharing! ✨");
-      return true;
-    }
-    publicImageUrl = null;
-    showToast("Photo upload failed – link will be text-only");
-    return false;
-  } catch (err) {
-    console.warn("Upload fallback error:", err);
-    publicImageUrl = null;
-    showToast("Photo upload failed – link will be text-only");
-    return false;
-  }
-}
-
-document.getElementById("photoUpload").addEventListener("change", (e) => {
+document.getElementById("photoUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setPhotoSource(dataUrl);
-      publicImageUrl = null;
-      uploadPromise = uploadPhotoToImgur(dataUrl); // runs in background
+    reader.onload = async (event) => {
+      const compressed = await compressImage(event.target.result);
+      setPhotoSource(compressed);
+      showToast("Photo processed successfully! ✨");
     };
     reader.readAsDataURL(file);
   }
 });
 
-// --- Scratch-Card Engine with 60%-70% Auto-Clear ---
+// --- Scratch-Card Engine ---
 function initScratchCard() {
   const canvas = document.getElementById("scratchCanvas");
   if (!canvas) return;
   const ctxScratch = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
-  
+
   canvas.style.opacity = "1";
   canvas.style.pointerEvents = "auto";
   canvas.width = rect.width || 360;
@@ -278,9 +262,7 @@ function initScratchCard() {
     let clearedCount = 0;
 
     for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] === 0) {
-        clearedCount++;
-      }
+      if (pixels[i] === 0) clearedCount++;
     }
 
     const percentageScratched = clearedCount / (pixels.length / 4);
@@ -365,8 +347,8 @@ function revealSurprise(you, friend, updateUrl = true) {
     const url = new URL(window.location.href);
     url.searchParams.set("from", you);
     url.searchParams.set("to", friend);
-    if (publicImageUrl) {
-      url.searchParams.set("img", publicImageUrl);
+    if (uploadedImageDataUrl) {
+      url.searchParams.set("imgData", uploadedImageDataUrl);
     }
     window.history.pushState({}, "", url);
   }
@@ -400,11 +382,11 @@ function resetCard() {
   card.classList.remove("flipped");
   playFlipSound();
   stopNightMode();
-  
+
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
-  url.searchParams.delete("img");
+  url.searchParams.delete("imgData");
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -412,8 +394,6 @@ function resetCard() {
     document.getElementById("polaroidPreview").hidden = true;
     document.getElementById("cardBackPolaroid").hidden = true;
     uploadedImageDataUrl = null;
-    publicImageUrl = null;
-    uploadPromise = null;
     formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
@@ -484,33 +464,13 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
-  if (publicImageUrl) {
-    url.searchParams.set("img", publicImageUrl);
+  if (uploadedImageDataUrl) {
+    url.searchParams.set("imgData", uploadedImageDataUrl);
   }
   return url.toString();
 }
 
-function plainMessage() {
-  return buildMessageLines(state.friendName, state.yourName).join("\n");
-}
-
-async function copyMessage() {
-  const text = plainMessage();
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast("Message copied 📋");
-  } catch (err) {
-    showToast("Message copied 📋");
-  }
-}
-
-// --- 2) shareCard() Replacement ---
 async function shareCard() {
-  if (uploadedImageDataUrl && !publicImageUrl && uploadPromise) {
-    showToast("Finishing photo upload... ⏳");
-    await uploadPromise;
-  }
-
   const shareUrl = getShareableUrl();
 
   if (navigator.share) {
@@ -564,7 +524,6 @@ async function downloadCard() {
   if (hasPhoto) {
     await new Promise((resolve) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.onload = () => {
         const pWidth = 300;
         const pHeight = 220;
@@ -626,7 +585,10 @@ function initApp() {
 
   form.addEventListener("submit", handleGenerate);
   resetBtn.addEventListener("click", resetCard);
-  copyBtn.addEventListener("click", copyMessage);
+  copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(buildMessageLines(state.friendName, state.yourName).join("\n"));
+    showToast("Message copied 📋");
+  });
   downloadBtn.addEventListener("click", downloadCard);
   shareBtn.addEventListener("click", shareCard);
   soundToggle.addEventListener("click", toggleSound);
@@ -638,11 +600,10 @@ function initApp() {
   const urlParams = new URLSearchParams(window.location.search);
   const fromParam = urlParams.get("from");
   const toParam = urlParams.get("to");
-  const imgParam = urlParams.get("img");
+  const imgDataParam = urlParams.get("imgData");
 
-  if (imgParam) {
-    publicImageUrl = imgParam;
-    setPhotoSource(imgParam);
+  if (imgDataParam) {
+    setPhotoSource(imgDataParam);
   }
 
   if (fromParam && toParam) {
