@@ -23,10 +23,6 @@ const nextSlideBtn = document.getElementById("nextSlideBtn");
 const stickerStage = document.getElementById("stickerStage");
 const stickerBackBtn = document.getElementById("stickerBackBtn");
 const stickerResetBtn = document.getElementById("stickerResetBtn");
-const stickerDownloadBtn = document.getElementById("stickerDownloadBtn");
-const stickerShareBtn = document.getElementById("stickerShareBtn");
-const cutoutRow1 = document.getElementById("cutoutRow1");
-const cutoutRow2 = document.getElementById("cutoutRow2");
 const soundToggle = document.getElementById("soundToggle");
 
 const ctx = confettiCanvas.getContext("2d");
@@ -37,7 +33,6 @@ const state = {
   yourName: "",
   friendName: "",
   isNight: false,
-  memoryTimer: null,
   soundEnabled: true
 };
 
@@ -107,7 +102,6 @@ function maximizeImage(src) {
   lightbox.classList.add("active");
 }
 
-// Attach Lightbox event listeners to Polaroid images
 document.addEventListener("click", (e) => {
   const polaroid = e.target.closest(".polaroid-frame");
   if (polaroid) {
@@ -186,24 +180,35 @@ function stopNightMode() {
   starsLayer.classList.remove("visible");
 }
 
-// --- Photo Upload Handler ---
+// --- Photo Upload Handler with Storage Fix ---
+function setPhotoSource(dataUrl) {
+  uploadedImageDataUrl = dataUrl;
+  const frontImg = document.getElementById("polaroidImg");
+  const backImg = document.getElementById("cardBackPolaroidImg");
+  if (frontImg) frontImg.src = dataUrl;
+  if (backImg) backImg.src = dataUrl;
+  
+  document.getElementById("polaroidPreview").hidden = false;
+  const cardBackPolaroid = document.getElementById("cardBackPolaroid");
+  if (cardBackPolaroid) cardBackPolaroid.hidden = false;
+}
+
 document.getElementById("photoUpload").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = (event) => {
-      uploadedImageDataUrl = event.target.result;
-      const frontImg = document.getElementById("polaroidImg");
-      const backImg = document.getElementById("cardBackPolaroidImg");
-      if (frontImg) frontImg.src = uploadedImageDataUrl;
-      if (backImg) backImg.src = uploadedImageDataUrl;
-      document.getElementById("polaroidPreview").hidden = false;
+      const dataUrl = event.target.result;
+      setPhotoSource(dataUrl);
+      try {
+        localStorage.setItem("saved_friendship_photo", dataUrl);
+      } catch (err) {}
     };
     reader.readAsDataURL(file);
   }
 });
 
-// --- Scratch-Card Engine ---
+// --- Scratch-Card Engine with 60%-70% Auto-Clear ---
 function initScratchCard() {
   const canvas = document.getElementById("scratchCanvas");
   if (!canvas) return;
@@ -229,6 +234,30 @@ function initScratchCard() {
 
   let isScratching = false;
 
+  // Calculates scratched percentage and auto-clears at 60%
+  function checkScratchPercentage() {
+    const imgData = ctxScratch.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imgData.data;
+    let clearedCount = 0;
+
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] === 0) {
+        clearedCount++;
+      }
+    }
+
+    const percentageScratched = clearedCount / (pixels.length / 4);
+
+    // Auto-clear threshold set between 60% and 70% (0.60)
+    if (percentageScratched >= 0.60) {
+      canvas.style.transition = "opacity 0.6s ease";
+      canvas.style.opacity = "0";
+      setTimeout(() => {
+        canvas.style.pointerEvents = "none";
+      }, 600);
+    }
+  }
+
   function scratch(e) {
     if (!isScratching) return;
     const r = canvas.getBoundingClientRect();
@@ -239,6 +268,8 @@ function initScratchCard() {
     ctxScratch.beginPath();
     ctxScratch.arc(x, y, 26, 0, Math.PI * 2);
     ctxScratch.fill();
+
+    checkScratchPercentage();
   }
 
   ["mousedown", "touchstart"].forEach(evt => canvas.addEventListener(evt, (e) => { isScratching = true; scratch(e); }));
@@ -291,9 +322,7 @@ function revealSurprise(you, friend, updateUrl = true) {
   state.friendName = friend;
 
   if (uploadedImageDataUrl) {
-    const backPolaroidImg = document.getElementById("cardBackPolaroidImg");
-    if (backPolaroidImg) backPolaroidImg.src = uploadedImageDataUrl;
-    document.getElementById("cardBackPolaroid").hidden = false;
+    setPhotoSource(uploadedImageDataUrl);
   }
 
   if (updateUrl) {
@@ -333,10 +362,10 @@ function resetCard() {
   playFlipSound();
   stopNightMode();
   
+  localStorage.removeItem("saved_friendship_photo");
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
-  window.location.hash = "";
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -352,7 +381,7 @@ function resetCard() {
   }, 500);
 }
 
-// --- Confetti Canvas System ---
+// --- Confetti Engine ---
 function resizeConfettiCanvas() {
   confettiCanvas.width = window.innerWidth;
   confettiCanvas.height = window.innerHeight;
@@ -414,9 +443,6 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
-  if (uploadedImageDataUrl) {
-    window.location.hash = "img=" + encodeURIComponent(uploadedImageDataUrl);
-  }
   return url.toString();
 }
 
@@ -454,7 +480,6 @@ async function shareCard() {
   }
 }
 
-// Canvas Download Card Exporter
 async function downloadCard() {
   const hasPhoto = !!uploadedImageDataUrl;
   const W = 900;
@@ -558,18 +583,15 @@ function initApp() {
   stickerBackBtn.addEventListener("click", hideStickerSlide);
   stickerResetBtn.addEventListener("click", resetCard);
 
+  // Load Saved Photo if Available
+  const savedPhoto = localStorage.getItem("saved_friendship_photo");
+  if (savedPhoto) {
+    setPhotoSource(savedPhoto);
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const fromParam = urlParams.get("from");
   const toParam = urlParams.get("to");
-
-  if (window.location.hash.startsWith("#img=")) {
-    uploadedImageDataUrl = decodeURIComponent(window.location.hash.replace("#img=", ""));
-    const frontImg = document.getElementById("polaroidImg");
-    const backImg = document.getElementById("cardBackPolaroidImg");
-    if (frontImg) frontImg.src = uploadedImageDataUrl;
-    if (backImg) backImg.src = uploadedImageDataUrl;
-    document.getElementById("polaroidPreview").hidden = false;
-  }
 
   if (fromParam && toParam) {
     yourNameInput.value = fromParam;
