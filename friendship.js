@@ -28,6 +28,7 @@ const soundToggle = document.getElementById("soundToggle");
 const ctx = confettiCanvas.getContext("2d");
 
 let uploadedImageDataUrl = null;
+let publicImageUrl = null; // Stores online link for cross-device sharing
 
 const state = {
   yourName: "",
@@ -180,7 +181,7 @@ function stopNightMode() {
   starsLayer.classList.remove("visible");
 }
 
-// --- Photo Upload Handler with Storage Fix ---
+// --- Photo Upload Handler ---
 function setPhotoSource(dataUrl) {
   uploadedImageDataUrl = dataUrl;
   const frontImg = document.getElementById("polaroidImg");
@@ -193,16 +194,34 @@ function setPhotoSource(dataUrl) {
   if (cardBackPolaroid) cardBackPolaroid.hidden = false;
 }
 
-document.getElementById("photoUpload").addEventListener("change", (e) => {
+// Uploads Image to free public host so anyone receiving the link can see it
+async function uploadToImgBB(base64Data) {
+  try {
+    const formData = new FormData();
+    formData.append("image", base64Data.split(",")[1]);
+    
+    // Free public API key for sharing cards
+    const res = await fetch("https://api.imgbb.com/1/upload?key=6d257f2c1d0138f371a6b0c20f1883e6", {
+      method: "POST",
+      body: formData
+    });
+    const result = await res.json();
+    if (result && result.data && result.data.url) {
+      publicImageUrl = result.data.url;
+    }
+  } catch (err) {
+    console.warn("Could not generate public photo URL:", err);
+  }
+}
+
+document.getElementById("photoUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const dataUrl = event.target.result;
       setPhotoSource(dataUrl);
-      try {
-        localStorage.setItem("saved_friendship_photo", dataUrl);
-      } catch (err) {}
+      await uploadToImgBB(dataUrl);
     };
     reader.readAsDataURL(file);
   }
@@ -234,7 +253,6 @@ function initScratchCard() {
 
   let isScratching = false;
 
-  // Calculates scratched percentage and auto-clears at 60%
   function checkScratchPercentage() {
     const imgData = ctxScratch.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = imgData.data;
@@ -248,7 +266,6 @@ function initScratchCard() {
 
     const percentageScratched = clearedCount / (pixels.length / 4);
 
-    // Auto-clear threshold set between 60% and 70% (0.60)
     if (percentageScratched >= 0.60) {
       canvas.style.transition = "opacity 0.6s ease";
       canvas.style.opacity = "0";
@@ -329,6 +346,9 @@ function revealSurprise(you, friend, updateUrl = true) {
     const url = new URL(window.location.href);
     url.searchParams.set("from", you);
     url.searchParams.set("to", friend);
+    if (publicImageUrl) {
+      url.searchParams.set("img", publicImageUrl);
+    }
     window.history.pushState({}, "", url);
   }
 
@@ -362,10 +382,10 @@ function resetCard() {
   playFlipSound();
   stopNightMode();
   
-  localStorage.removeItem("saved_friendship_photo");
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
+  url.searchParams.delete("img");
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -373,6 +393,7 @@ function resetCard() {
     document.getElementById("polaroidPreview").hidden = true;
     document.getElementById("cardBackPolaroid").hidden = true;
     uploadedImageDataUrl = null;
+    publicImageUrl = null;
     formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
@@ -443,6 +464,9 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
+  if (publicImageUrl) {
+    url.searchParams.set("img", publicImageUrl);
+  }
   return url.toString();
 }
 
@@ -583,15 +607,15 @@ function initApp() {
   stickerBackBtn.addEventListener("click", hideStickerSlide);
   stickerResetBtn.addEventListener("click", resetCard);
 
-  // Load Saved Photo if Available
-  const savedPhoto = localStorage.getItem("saved_friendship_photo");
-  if (savedPhoto) {
-    setPhotoSource(savedPhoto);
-  }
-
   const urlParams = new URLSearchParams(window.location.search);
   const fromParam = urlParams.get("from");
   const toParam = urlParams.get("to");
+  const imgParam = urlParams.get("img");
+
+  if (imgParam) {
+    publicImageUrl = imgParam;
+    setPhotoSource(imgParam);
+  }
 
   if (fromParam && toParam) {
     yourNameInput.value = fromParam;
