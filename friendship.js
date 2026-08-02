@@ -28,8 +28,6 @@ const soundToggle = document.getElementById("soundToggle");
 const ctx = confettiCanvas.getContext("2d");
 
 let uploadedImageDataUrl = null;
-let uploadPromise = null;
-let publicImageUrl = null;
 
 const state = {
   yourName: "",
@@ -182,62 +180,55 @@ function stopNightMode() {
   starsLayer.classList.remove("visible");
 }
 
-// --- Photo Upload & Hosting Engine ---
+// --- Native High-Efficiency WebP Image Compression for URL Sharing ---
+function compressImageForUrl(dataUrl, maxWidth = 350, quality = 0.45) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // WebP compression ensures ultra-compact string footprint for URL query parameters
+      resolve(canvas.toDataURL("image/webp", quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function setPhotoSource(dataUrl) {
   uploadedImageDataUrl = dataUrl;
   const frontImg = document.getElementById("polaroidImg");
   const backImg = document.getElementById("cardBackPolaroidImg");
-  if (frontImg) {
-    frontImg.crossOrigin = "anonymous";
-    frontImg.src = dataUrl;
-  }
-  if (backImg) {
-    backImg.crossOrigin = "anonymous";
-    backImg.src = dataUrl;
-  }
+  
+  if (frontImg) frontImg.src = dataUrl;
+  if (backImg) backImg.src = dataUrl;
 
   document.getElementById("polaroidPreview").hidden = false;
   const cardBackPolaroid = document.getElementById("cardBackPolaroid");
   if (cardBackPolaroid) cardBackPolaroid.hidden = false;
 }
 
-async function uploadPhotoToImgur(base64Data) {
-  try {
-    showToast("Uploading photo for sharing... ⏳");
-    const rawBase64 = base64Data.split(",")[1];
-    const response = await fetch("https://api.imgur.com/3/image", {
-      method: "POST",
-      headers: {
-        Authorization: "Client-ID e0e5fb25d2542a1",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ image: rawBase64, type: "base64" })
-    });
-    const result = await response.json();
-    if (result && result.success && result.data.link) {
-      publicImageUrl = result.data.link;
-      showToast("Photo ready for sharing! ✨");
-      return true;
-    }
-    publicImageUrl = null;
-    showToast("Photo saved locally!");
-    return false;
-  } catch (err) {
-    console.warn("Upload error:", err);
-    publicImageUrl = null;
-    return false;
-  }
-}
-
-document.getElementById("photoUpload").addEventListener("change", (e) => {
+document.getElementById("photoUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setPhotoSource(dataUrl);
-      publicImageUrl = null;
-      uploadPromise = uploadPhotoToImgur(dataUrl);
+    reader.onload = async (event) => {
+      showToast("Processing photo... ✨");
+      const compressedWebP = await compressImageForUrl(event.target.result);
+      setPhotoSource(compressedWebP);
+      showToast("Photo added successfully! ✨");
     };
     reader.readAsDataURL(file);
   }
@@ -360,8 +351,8 @@ function revealSurprise(you, friend, updateUrl = true) {
     const url = new URL(window.location.href);
     url.searchParams.set("from", you);
     url.searchParams.set("to", friend);
-    if (publicImageUrl) {
-      url.searchParams.set("img", publicImageUrl);
+    if (uploadedImageDataUrl) {
+      url.searchParams.set("imgData", encodeURIComponent(uploadedImageDataUrl));
     }
     window.history.pushState({}, "", url);
   }
@@ -399,7 +390,7 @@ function resetCard() {
   const url = new URL(window.location.href);
   url.searchParams.delete("from");
   url.searchParams.delete("to");
-  url.searchParams.delete("img");
+  url.searchParams.delete("imgData");
   window.history.pushState({}, "", url);
 
   setTimeout(() => {
@@ -407,8 +398,6 @@ function resetCard() {
     document.getElementById("polaroidPreview").hidden = true;
     document.getElementById("cardBackPolaroid").hidden = true;
     uploadedImageDataUrl = null;
-    publicImageUrl = null;
-    uploadPromise = null;
     formError.classList.remove("visible");
     messageContent.innerHTML = "";
     quoteEl.classList.remove("visible");
@@ -479,18 +468,13 @@ function getShareableUrl() {
   const url = new URL(window.location.href);
   url.searchParams.set("from", state.yourName);
   url.searchParams.set("to", state.friendName);
-  if (publicImageUrl) {
-    url.searchParams.set("img", publicImageUrl);
+  if (uploadedImageDataUrl) {
+    url.searchParams.set("imgData", encodeURIComponent(uploadedImageDataUrl));
   }
   return url.toString();
 }
 
 async function shareCard() {
-  if (uploadedImageDataUrl && !publicImageUrl && uploadPromise) {
-    showToast("Finishing photo upload... ⏳");
-    await uploadPromise;
-  }
-
   const shareUrl = getShareableUrl();
 
   if (navigator.share) {
@@ -511,13 +495,18 @@ async function shareCard() {
   }
 }
 
-// --- Dynamic Dynamic Aspect Ratio Canvas Downloader ---
+// --- Dynamic Canvas Downloader with Large Photo & Zero Blank Space ---
 async function downloadCard() {
   const hasPhoto = !!uploadedImageDataUrl;
   const W = 900;
   
-  // High canvas height for crisp resolution
-  const H = hasPhoto ? 1400 : 1100;
+  // Dynamic height calculation based on presence of photo
+  let cardContentHeight = 650; 
+  if (hasPhoto) {
+    cardContentHeight += 520; // Room for enlarged photo
+  }
+
+  const H = cardContentHeight;
   const off = document.createElement("canvas");
   off.width = W;
   off.height = H;
@@ -532,28 +521,27 @@ async function downloadCard() {
   c.fillRect(0, 0, W, H);
 
   // Card Panel Box
-  const pad = 60;
-  const panelX = pad, panelY = 80, panelW = W - pad * 2, panelH = H - 160;
+  const pad = 50;
+  const panelX = pad, panelY = 50, panelW = W - pad * 2, panelH = H - 100;
 
-  c.fillStyle = "rgba(255,255,255,0.92)";
+  c.fillStyle = "rgba(255,255,255,0.95)";
   roundRect(c, panelX, panelY, panelW, panelH, 32);
   c.fill();
 
   // Header Text
   c.textAlign = "center";
   c.fillStyle = "#2e2a4a";
-  c.font = "700 52px 'Dancing Script', cursive, sans-serif";
-  c.fillText("Happy Friendship Day 💙", W / 2, panelY + 110);
+  c.font = "700 54px 'Dancing Script', cursive, sans-serif";
+  c.fillText("Happy Friendship Day 💙", W / 2, panelY + 90);
 
   let startBodyY = panelY + 180;
 
   if (hasPhoto) {
     await new Promise((resolve) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.onload = () => {
-        // Calculate dynamic dimensions preserving aspect ratio
-        const maxBoxWidth = 480;
+        // High max-bounds scale the image up significantly on the card
+        const maxBoxWidth = 580;
         const maxBoxHeight = 480;
 
         let renderW = img.width;
@@ -564,35 +552,35 @@ async function downloadCard() {
         renderH = renderH * ratio;
 
         const pX = (W - renderW) / 2;
-        const pY = panelY + 140;
+        const pY = panelY + 120;
 
         // White Polaroid Frame
-        const framePadding = 16;
+        const framePadding = 18;
         c.fillStyle = "#ffffff";
-        c.shadowColor = "rgba(0,0,0,0.15)";
-        c.shadowBlur = 15;
-        c.shadowOffsetY = 6;
+        c.shadowColor = "rgba(0,0,0,0.12)";
+        c.shadowBlur = 20;
+        c.shadowOffsetY = 8;
         
         roundRect(
           c, 
           pX - framePadding, 
           pY - framePadding, 
           renderW + (framePadding * 2), 
-          renderH + (framePadding * 2) + 40, 
-          12
+          renderH + (framePadding * 2) + 45, 
+          16
         );
         c.fill();
 
-        // Reset shadows for crisp image rendering
+        // Draw Image
         c.shadowColor = "transparent";
         c.drawImage(img, pX, pY, renderW, renderH);
 
         // Frame Caption
         c.fillStyle = "#333333";
-        c.font = "700 28px 'Dancing Script', cursive, sans-serif";
-        c.fillText("Besties ✨", W / 2, pY + renderH + 32);
+        c.font = "700 32px 'Dancing Script', cursive, sans-serif";
+        c.fillText("Besties ✨", W / 2, pY + renderH + 36);
 
-        startBodyY = pY + renderH + 100;
+        startBodyY = pY + renderH + 105;
         resolve();
       };
       img.onerror = () => resolve();
@@ -601,11 +589,11 @@ async function downloadCard() {
   }
 
   // Message Lines
-  c.font = "600 36px 'Dancing Script', cursive, sans-serif";
+  c.font = "600 38px 'Dancing Script', cursive, sans-serif";
   c.fillStyle = "#6c63ff";
   const lines = buildMessageLines(state.friendName, state.yourName);
   lines.forEach((line, i) => {
-    c.fillText(line, W / 2, startBodyY + (i * 52));
+    c.fillText(line, W / 2, startBodyY + (i * 54));
   });
 
   // Export to Blob
@@ -652,14 +640,19 @@ function initApp() {
   stickerBackBtn.addEventListener("click", hideStickerSlide);
   stickerResetBtn.addEventListener("click", resetCard);
 
+  // Read params on link visit
   const urlParams = new URLSearchParams(window.location.search);
   const fromParam = urlParams.get("from");
   const toParam = urlParams.get("to");
-  const imgParam = urlParams.get("img");
+  const imgDataParam = urlParams.get("imgData");
 
-  if (imgParam) {
-    publicImageUrl = imgParam;
-    setPhotoSource(imgParam);
+  if (imgDataParam) {
+    try {
+      const decodedImg = decodeURIComponent(imgDataParam);
+      setPhotoSource(decodedImg);
+    } catch (e) {
+      console.error("Failed to decode image parameter", e);
+    }
   }
 
   if (fromParam && toParam) {
